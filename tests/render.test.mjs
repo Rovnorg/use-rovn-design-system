@@ -8,7 +8,7 @@ import {JSDOM} from 'jsdom';
 const run=promisify(execFile);
 async function render(input,name,args=[]) {
   const out=path.resolve(`tmp/tests/${name}.pdf`);
-  await run(process.execPath,['scripts/render.mjs',input,'--out',out,...args],{maxBuffer:2e6});
+  await run(process.execPath,['scripts/render.mjs',input,'--out',out,'--layout','report-v1',...args],{maxBuffer:2e6});
   const qa=JSON.parse(await fs.readFile(out.replace('.pdf','.qa.json'),'utf8'));
   const html=await fs.readFile(out.replace('.pdf','.html'),'utf8');
   assert.equal((await fs.readFile(out)).subarray(0,5).toString(),'%PDF-');

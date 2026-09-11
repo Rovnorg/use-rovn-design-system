@@ -28,9 +28,15 @@ md.block.ruler.before('html_block', 'notion_aside', (state, start, end, silent) 
 }, { alt: ['paragraph', 'reference', 'blockquote'] });
 const inlineTags = ['strong', 'em', 'a', 'code', 'br', 'sup', 'sub', 's', 'span'];
 export function cleanInline(html) {
-  return sanitize(String(html ?? ''), { allowedTags: inlineTags,
+  // Markdown deliberately treats raw HTML as text. Legal source templates commonly use
+  // inert span placeholders; retain their supplied words without printing the tag syntax.
+  const source = String(html ?? '').replace(/&lt;\/?span(?:\s[\s\S]*?)?&gt;/gi, '');
+  return sanitize(source, { allowedTags: inlineTags,
     allowedAttributes: { a: ['href', 'class'], sup: ['class'], span: ['data-note'] },
-    allowedSchemes: ['https', 'http', 'mailto'], allowProtocolRelative: false });
+    allowedSchemes: ['https', 'http', 'mailto'], allowProtocolRelative: false,
+    allowedSchemesByTag: { a: ['https', 'http', 'mailto'] },
+    allowVulnerableTags: false,
+    transformTags: { a: (tagName, attribs) => ({ tagName, attribs }) } });
 }
 export const inline = text => cleanInline(md.renderInline(String(text ?? '')));
 export function sectionLetter(index) {
@@ -83,9 +89,12 @@ function readBlocks(nodes, footnotes, warnings) {
   return blocks;
 }
 
-export async function loadInput(filename) {
+export async function loadInput(filename, { defaultMetadata = true } = {}) {
   const ext = path.extname(filename).toLowerCase();
-  if (ext === '.json') return validateDocument(JSON.parse(await fs.readFile(filename, 'utf8')));
+  if (ext === '.json') {
+    const prepared = JSON.parse(await fs.readFile(filename, 'utf8'));
+    return prepared.schemaVersion === 2 ? prepared : validateDocument(prepared, { defaultMetadata });
+  }
   let metadata = {}, html, warnings = [];
   if (ext === '.md' || ext === '.markdown') {
     const parsed = matter(await fs.readFile(filename, 'utf8')); metadata = parsed.data;
@@ -113,7 +122,7 @@ export async function loadInput(filename) {
   doc.querySelectorAll('ol:empty').forEach(e => e.remove());
   let blocks = readBlocks([...doc.body.children], notes, warnings);
   let title = metadata.title;
-  if (blocks[0]?.type === 'heading' && blocks[0].level === 1) { title ||= blocks[0].text; blocks.shift(); }
+  if (blocks[0]?.type === 'heading' && blocks[0].level === 1 && (!title || title.trim() === blocks[0].text.trim())) { title ||= blocks[0].text; blocks.shift(); }
   title ||= path.basename(filename, ext).replace(/[-_]/g, ' ');
   const minLevel = Math.min(...blocks.filter(b => b.type === 'heading').map(b => b.level), 2);
   const sections = []; let current;
@@ -121,7 +130,7 @@ export async function loadInput(filename) {
     if (block.type === 'heading' && block.level <= minLevel) {
       current = { title: block.text, blocks: [] }; sections.push(current);
     } else {
-      if (!current) { current = { title: 'Overview', blocks: [] }; sections.push(current); }
+      if (!current) { current = { title: 'Overview', generatedTitle: true, blocks: [] }; sections.push(current); }
       if (block.type === 'heading') block.level = block.level - minLevel;
       current.blocks.push(block);
     }
@@ -130,11 +139,11 @@ export async function loadInput(filename) {
   const appendix = [];
   // An explicit Sources/References heading is source material, not an ordinary body section.
   for (let i = sections.length - 1; i >= 0; i--) if (/^(sources|references|bibliography|appendix)$/i.test(sections[i].title)) appendix.unshift(...sections.splice(i, 1)[0].blocks);
-  return validateDocument({ schemaVersion: 1, metadata: { ...metadata, title }, options: { darkPages: metadata.darkPages ?? true }, sections, footnotes: notes, sources, appendix, warnings });
+  return validateDocument({ schemaVersion: 1, metadata: { ...metadata, title }, options: { darkPages: metadata.darkPages ?? true }, sections, footnotes: notes, sources, appendix, warnings }, { defaultMetadata });
 }
 
 const types = new Set(['paragraph', 'lead', 'heading', 'list-item', 'table', 'code', 'callout', 'cards', 'image', 'image-column', 'image-band', 'rule']);
-export function validateDocument(input) {
+export function validateDocument(input, { defaultMetadata = true } = {}) {
   if (input.schemaVersion !== 1) throw new Error('Expected schemaVersion: 1.');
   if (!input.metadata?.title || !Array.isArray(input.sections) || !input.sections.length) throw new Error('Document needs a title and at least one section.');
   const doc = structuredClone(input); doc.footnotes ||= {}; doc.sources ||= []; doc.appendix ||= []; doc.warnings ||= [];
@@ -142,9 +151,9 @@ export function validateDocument(input) {
   if (doc.options.darkPages == null) doc.options.darkPages = true;
   if (typeof doc.options.darkPages !== 'boolean') throw new Error('options.darkPages must be true or false.');
   for (const key of ['title', 'subtitle', 'eyebrow', 'summary', 'smallPrint', 'author', 'date', 'version']) {
-    if (doc.metadata[key] != null) doc.metadata[key] = String(doc.metadata[key]);
+    if (doc.metadata[key] != null) doc.metadata[key] = key === 'date' && doc.metadata[key] instanceof Date ? doc.metadata[key].toISOString().slice(0, 10) : String(doc.metadata[key]);
   }
-  doc.metadata.version ||= '1'; doc.metadata.date ||= new Date().toISOString().slice(0, 10);
+  if (defaultMetadata) { doc.metadata.version ||= '1'; doc.metadata.date ||= new Date().toISOString().slice(0, 10); }
   if (!doc.metadata.author) doc.warnings.push('No author supplied; author field omitted.');
   doc.warnings = [...new Set(doc.warnings)];
   if (!Array.isArray(doc.sources) || !Array.isArray(doc.appendix) || !Array.isArray(doc.warnings)) throw new Error('Sources, appendix, and warnings must be arrays.');

@@ -1,0 +1,240 @@
+{
+  "version": 1,
+  "status": "research taxonomy; not an implemented support claim",
+  "researchedOn": "2026-09-11",
+  "scope": "Professional documents and associated working files. Families are extensible; recipient-prescribed and specialist formats retain their own requirements.",
+  "intentDimensions": ["audience", "purpose", "readerAction", "readingMode", "length", "contentStructure", "editability", "confidentiality", "locale", "recipientRequirements", "sourcePreservation"],
+  "families": [
+    {
+      "id": "executive",
+      "name": "Executive decisions and briefings",
+      "types": ["executive memo", "decision memo", "one-pager", "briefing note", "issue brief", "recommendation memo", "status update", "executive summary"],
+      "job": "Help a busy reader understand an issue and decide or act.",
+      "structure": ["subject and supplied routing metadata", "decision or takeaway", "essential evidence", "options and tradeoffs when relevant", "requested action and owner"],
+      "layout": "Compact first-page masthead, continuous flow, short sections, no automatic cover or contents page.",
+      "formats": ["DOCX", "PDF", "HTML"],
+      "checks": ["decision visible on first page", "one-page request met without dropping text or shrinking body type", "attachment references resolve"],
+      "resources": ["purdue-memo", "butterick"]
+    },
+    {
+      "id": "strategy",
+      "name": "Business planning and strategy",
+      "types": ["business plan", "lean business plan", "strategic plan", "annual operating plan", "business case", "market-entry plan", "scenario plan", "feasibility study"],
+      "job": "Explain choices, evidence, resources, economics and execution.",
+      "structure": ["executive synthesis", "problem and opportunity", "market and alternatives", "chosen strategy", "operating model", "milestones and ownership", "financial assumptions and scenarios", "risks and appendices"],
+      "layout": "Readable chapter flow, selective section openers, navigable contents for long plans, separate financial schedules.",
+      "formats": ["DOCX", "PDF", "HTML", "XLSX companion"],
+      "checks": ["lean and full plans differ", "assumptions distinguished from results", "financial summary reconciles to workbook"],
+      "resources": ["sba-plan", "fast", "gov-spreadsheets"]
+    },
+    {
+      "id": "governance",
+      "name": "Board and corporate governance",
+      "types": ["board paper", "board pack", "committee paper", "meeting agenda", "meeting minutes", "resolution", "written consent", "decision register"],
+      "job": "Prepare, record or retrieve decisions under named authority.",
+      "structure": ["meeting and item metadata", "purpose: information, discussion or decision", "paper or resolution text", "supporting exhibits", "recorded decisions and actions only when supplied"],
+      "layout": "Restrained numbered papers, pack index, clear item boundaries, page-of-total and approval areas where appropriate.",
+      "formats": ["DOCX", "PDF", "HTML", "XLSX action register"],
+      "checks": ["draft and approved records distinguished", "pack index and page references work", "no invented decisions or votes"],
+      "resources": ["frc-board", "ecma-office"]
+    },
+    {
+      "id": "investor",
+      "name": "Investor communication and diligence",
+      "types": ["investor memo", "investment committee memo", "investor update", "diligence pack", "diligence questionnaire", "data-room index", "fundraising FAQ", "financial appendix"],
+      "job": "Let a reader evaluate the business and trace statements to evidence.",
+      "structure": ["investment or company overview", "evidence and dated metrics", "economics", "risks and open questions", "requested decision when supplied", "source and file index"],
+      "layout": "Light, calm reading surface, restrained amber accents, evidence tables and linked appendices; no paper grain.",
+      "formats": ["DOCX", "PDF", "HTML", "XLSX companion", "PPTX when presentation is requested"],
+      "checks": ["forecast and actuals distinguished", "recipient-specific confidentiality", "no internal generation labels", "source dates retained"],
+      "resources": ["sequoia", "frc-board", "gov-spreadsheets"]
+    },
+    {
+      "id": "research",
+      "name": "Research and evidence reports",
+      "types": ["research report", "literature review", "research protocol", "survey report", "interview synthesis", "experiment report", "evaluation report", "white paper"],
+      "job": "Explain a question, method, evidence, findings and limitations.",
+      "structure": ["abstract or summary", "question and scope", "method", "results", "discussion", "limitations", "references", "data and methods appendices"],
+      "layout": "Sustained reading typography, numbered figures and tables, citations and footnotes, optional long-document contents.",
+      "formats": ["DOCX", "PDF", "HTML", "XLSX or CSV data companion", "JATS only for a validated publisher workflow"],
+      "checks": ["citations and bibliography agree", "captions and notes stay associated", "sample denominators and limitations retained", "equations either supported or rejected explicitly"],
+      "resources": ["jats", "csl", "quarto", "butterick"]
+    },
+    {
+      "id": "technical",
+      "name": "Technical and product documentation",
+      "types": ["technical specification", "product requirements document", "architecture decision record", "RFC", "API reference", "system design", "test plan", "release notes", "migration guide", "data dictionary"],
+      "job": "Help specialists build, integrate, verify or understand a system.",
+      "structure": ["status and scope", "context and requirements", "design or interface contract", "alternatives", "failure and recovery behavior", "verification", "references"],
+      "layout": "Numbered navigable sections, exact code blocks, diagrams with text equivalents, wide schema tables and stable anchors.",
+      "formats": ["Markdown", "HTML", "PDF", "DOCX when review requires it", "JSON or YAML schemas"],
+      "checks": ["literal code intact", "links and anchors stable", "reference distinguished from tutorial", "schema examples validate"],
+      "resources": ["diataxis", "rfc-style", "json-schema", "pandoc"]
+    },
+    {
+      "id": "proposal",
+      "name": "Proposals and scoped work",
+      "types": ["business proposal", "project proposal", "statement of work", "statement of objectives", "performance work statement", "implementation proposal", "change request", "change order"],
+      "job": "Explain the offered outcome, bounded work, cost and acceptance.",
+      "structure": ["client and objective", "scope and exclusions", "deliverables", "milestones", "responsibilities and dependencies", "fees and assumptions", "acceptance", "terms or contract references"],
+      "layout": "Client-facing opening, milestone and deliverable tables, clear commercial summary, restrained acceptance block.",
+      "formats": ["DOCX", "PDF", "HTML", "XLSX pricing companion"],
+      "checks": ["scope and exclusions explicit", "fees reconcile", "acceptance refers to actual deliverables", "contract terms preserved exactly"],
+      "resources": ["far-pws", "bonterms", "common-paper"]
+    },
+    {
+      "id": "commercial",
+      "name": "Commercial, pricing and procurement files",
+      "types": ["pricing sheet", "rate card", "quote", "order form", "invoice", "credit note", "purchase order", "RFI", "RFP", "RFQ", "vendor comparison", "procurement recommendation"],
+      "job": "Make a purchase, offer or payment understandable and traceable.",
+      "structure": ["parties and reference", "dated scope", "items and quantities where applicable", "currency and amounts", "assumptions and supplied terms", "validity or due date when supplied"],
+      "layout": "Tabular priority, aligned numerical columns, visible totals and conditions, limited decoration.",
+      "formats": ["DOCX", "PDF", "HTML", "XLSX", "UBL XML only through a validated trading workflow"],
+      "checks": ["currency and units explicit", "arithmetic reconciles", "blank differs from zero", "jurisdictional invoice requirements not assumed", "e-invoice compliance not inferred from a PDF"],
+      "resources": ["ubl", "far-pws", "gov-spreadsheets"]
+    },
+    {
+      "id": "legal",
+      "name": "Agreements and legal instruments",
+      "types": ["mutual NDA", "one-way NDA", "services agreement", "consulting agreement", "license agreement", "employment agreement", "IP assignment", "data-processing agreement", "business associate agreement", "addendum", "amendment", "termination notice", "settlement agreement", "term sheet", "letter of intent"],
+      "job": "Enable precise review, negotiation and execution of supplied legal text.",
+      "structure": ["title and parties", "operative text", "defined terms", "clauses and nested subclauses", "cross-references", "schedules and exhibits", "signature blocks"],
+      "layout": "Conventional black-on-white legal typography, restrained or absent branding, preserved clause numbering, dependable indentation and signature space.",
+      "formats": ["DOCX for editing", "PDF for review or execution copy", "HTML for authorized reading"],
+      "checks": ["no substantive edits during formatting", "names and defined terms preserved", "references point to correct clauses", "signature areas remain intact", "no decorative report cover", "formatting is not legal review or e-signature"],
+      "resources": ["common-paper", "bonterms", "butterick", "legaldocml"]
+    },
+    {
+      "id": "correspondence",
+      "name": "Formal correspondence",
+      "types": ["business letter", "cover letter", "recommendation letter", "notice letter", "complaint letter", "response letter", "transmittal letter", "invitation letter"],
+      "job": "Deliver a direct message to an identified recipient.",
+      "structure": ["sender and date when supplied", "recipient", "subject", "salutation", "body", "closing and signature", "enclosures or copies"],
+      "layout": "Block letter by default, compact letterhead, no separate cover or table of contents.",
+      "formats": ["DOCX", "PDF", "HTML or plain text when delivered as correspondence"],
+      "checks": ["recipient and supplied details correct", "closing stays with signature", "enclosures listed only when present"],
+      "resources": ["purdue-letter"]
+    },
+    {
+      "id": "operations",
+      "name": "Operating procedures and controlled documents",
+      "types": ["SOP", "operating playbook", "runbook", "policy", "work instruction", "checklist", "incident procedure", "escalation guide", "quality manual", "audit checklist"],
+      "job": "Help someone perform a repeatable task correctly and record completion.",
+      "structure": ["document identifier and status", "owner and approved version when supplied", "purpose and scope", "prerequisites", "roles", "steps and decisions", "exceptions", "records", "change history"],
+      "layout": "Task-focused headings, numbered steps, checklists and decision tables, visible control metadata.",
+      "formats": ["DOCX", "PDF", "HTML", "XLSX checklist or register"],
+      "checks": ["steps are actionable", "exception route present when supplied", "approvals not invented", "revision and effective-date fields are distinct"],
+      "resources": ["epa-sop", "diataxis", "section508"]
+    },
+    {
+      "id": "project",
+      "name": "Project delivery and coordination",
+      "types": ["project charter", "project plan", "delivery roadmap", "RAID log", "RACI matrix", "status report", "meeting notes", "action log", "handover pack", "retrospective"],
+      "job": "Coordinate ownership, dependencies, progress and exceptions.",
+      "structure": ["objective and scope", "roles", "milestones and dependencies", "status with evidence date", "risks and issues", "actions and decisions", "handover or closure criteria"],
+      "layout": "Compact management report plus structured working register; avoid a prose page for every status row.",
+      "formats": ["DOCX", "PDF", "HTML", "XLSX"],
+      "checks": ["owners and dates traceable", "planned and completed work differ", "snapshot and live register clearly identified"],
+      "resources": ["epa-sop", "gov-spreadsheets"]
+    },
+    {
+      "id": "finance",
+      "name": "Financial models and analytical workbooks",
+      "types": ["budget", "cash-flow forecast", "runway model", "three-statement model", "unit-economics model", "pricing model", "scenario analysis", "variance analysis", "capitalization model", "financial dashboard"],
+      "job": "Let users inspect assumptions, calculate outcomes and test scenarios.",
+      "structure": ["readme and units", "inputs and assumptions", "calculations", "outputs", "scenario controls", "checks and reconciliation", "sources"],
+      "layout": "Workbook-native cells and formulas, explicit units, readable numbers, minimal merges, separate presentation sheets from data tables.",
+      "formats": ["XLSX", "PDF or HTML snapshot", "CSV for individual data tables"],
+      "checks": ["formulas actually recalculated", "independent numerical checks", "dates and percentages typed", "no hidden sensitive sheets", "no external workbook dependencies by default"],
+      "resources": ["fast", "gov-spreadsheets", "exceljs", "ecma-office"]
+    },
+    {
+      "id": "people",
+      "name": "People and professional records",
+      "types": ["job description", "role scorecard", "interview guide", "onboarding plan", "employee handbook", "performance-review form", "resume", "CV", "professional biography", "training record"],
+      "job": "Communicate responsibilities, experience or an authorized personnel process.",
+      "structure": ["role or subject", "relevant responsibilities or chronology", "criteria or evidence", "next actions", "required acknowledgements when supplied"],
+      "layout": "Role-appropriate readable hierarchy; chronology for CVs, question-and-record layout for interviews, controlled policy flow for handbooks.",
+      "formats": ["DOCX", "PDF", "HTML", "XLSX record companion"],
+      "checks": ["no invented credentials or employment", "private data scoped", "form layout does not authorize an employment decision"],
+      "resources": ["opm-interview", "purdue-letter", "section508"]
+    },
+    {
+      "id": "learning",
+      "name": "Learning and enablement",
+      "types": ["training guide", "facilitator guide", "participant workbook", "lesson plan", "quick-reference guide", "job aid", "exercise sheet", "knowledge assessment"],
+      "job": "Teach a skill or support recall during work.",
+      "structure": ["learning objective", "prerequisites", "explanation or demonstration", "practice", "feedback or answer key", "job reference"],
+      "layout": "Distinct lesson and reference modes, space for exercises when requested, clear sequences and examples.",
+      "formats": ["DOCX", "PDF", "HTML", "PPTX for facilitated training", "EPUB for a validated book workflow"],
+      "checks": ["learning and reference content distinguishable", "answer key placement deliberate", "no false certificate or accreditation"],
+      "resources": ["diataxis", "section508", "epub"]
+    },
+    {
+      "id": "marketing",
+      "name": "Case studies and editorial communication",
+      "types": ["case study", "customer story", "capability statement", "product brief", "fact sheet", "brochure", "press release", "newsletter", "media kit", "annual narrative report"],
+      "job": "Communicate a useful story or proposition with attributable evidence.",
+      "structure": ["specific premise", "context", "approach or offer", "evidence and limitations", "reader next step", "sources or contacts when supplied"],
+      "layout": "Editorial pacing, selective visuals, evidence captions; case studies show a time-bound before/after, fact sheets prioritize lookup.",
+      "formats": ["DOCX", "PDF", "HTML", "PPTX for a presentation variant"],
+      "checks": ["claims sourced", "quote and image permissions retained", "decorative imagery never treated as evidence", "no fabricated customer proof"],
+      "resources": ["butterick", "section508", "w3c-tables"]
+    },
+    {
+      "id": "presentation",
+      "name": "Presentations and slide documents",
+      "types": ["live pitch deck", "send-ahead investor deck", "board presentation", "sales deck", "training deck", "research presentation", "conference talk", "workshop deck", "slide-based leave-behind"],
+      "job": "Support a spoken narrative or a self-contained visual reading sequence.",
+      "structure": ["purpose", "logical argument or teaching sequence", "evidence per slide", "decision or next step", "notes and appendix"],
+      "layout": "Separate 16:9 slide geometry; live-talk and reading-deck density differ. Use native editable shapes, text, charts and tables where supported.",
+      "formats": ["PPTX", "PDF", "HTML presentation"],
+      "checks": ["text readable at actual presentation size", "no slide overflow", "speaker notes intentional", "objects editable", "existing investor deck remains a separate surface"],
+      "resources": ["sequoia", "pptxgenjs", "section508"]
+    },
+    {
+      "id": "forms",
+      "name": "Forms, questionnaires and acknowledgements",
+      "types": ["intake form", "application form", "questionnaire", "survey", "consent form", "acknowledgement form", "inspection form", "evaluation form", "expense claim", "signature sheet"],
+      "job": "Collect specified information or an acknowledgement with clear field meaning.",
+      "structure": ["purpose and instructions", "grouped labelled fields", "required versus optional inputs", "validation or completion rules", "acknowledgement where supplied", "submission instructions when authorized"],
+      "layout": "Field-first, generous input space, sensible tab order and explicit labels. A printable blank form and an interactive form are different deliverables.",
+      "formats": ["DOCX", "printable PDF", "fillable PDF only with an implemented AcroForm adapter", "accessible HTML", "XLSX for tabular collection"],
+      "checks": ["labels programmatically associated", "instructions and error states understandable", "no invented consent text", "signature line not represented as an executed signature"],
+      "resources": ["section508", "w3c-forms", "docassemble"]
+    },
+    {
+      "id": "prescribed",
+      "name": "Recipient-prescribed and specialist documents",
+      "types": ["grant application", "regulatory filing", "court filing", "tax form", "credentialing application", "licensing submission", "insurance form", "procurement response", "journal submission", "clinical protocol", "safety data sheet", "shipping document"],
+      "job": "Satisfy the exact current recipient or governing format.",
+      "structure": ["recipient's required template and instructions", "required attachments", "validated source fields", "prescribed certification or signature text"],
+      "layout": "Recipient template controls geometry, fields and numbering; brand customization only when permitted.",
+      "formats": ["recipient-prescribed formats"],
+      "checks": ["current official version", "all required fields and attachments accounted for", "no unsupported legal or clinical content generation", "no claim of universal submission support"],
+      "resources": ["nih-guide", "sec-forms", "jats", "ubl"]
+    },
+    {
+      "id": "publications",
+      "name": "Books, manuals and long publications",
+      "types": ["handbook", "reference manual", "ebook", "multi-author report", "catalog", "technical monograph", "conference proceedings", "long-form guide"],
+      "job": "Support sustained reading and repeated navigation across a large work.",
+      "structure": ["front matter", "parts and chapters", "figures and tables", "notes", "bibliography", "glossary", "index where required", "back matter"],
+      "layout": "Book-specific pagination, navigation and front/back matter; reflowable reading and fixed print editions handled separately.",
+      "formats": ["PDF", "HTML", "DOCX", "EPUB after packaging and reading-system validation"],
+      "checks": ["chapter and note navigation", "front matter numbering", "cross-references", "widows and orphans", "EPUB packaging validation when applicable"],
+      "resources": ["pandoc", "quarto", "typst", "epub"]
+    },
+    {
+      "id": "data",
+      "name": "Data packages, registers and schedules",
+      "types": ["data table", "reconciliation schedule", "financial schedule", "asset register", "requirements matrix", "evidence index", "source catalog", "inventory", "appendix dataset", "data dictionary"],
+      "job": "Allow accurate lookup, filtering, transfer or reconciliation.",
+      "structure": ["dataset purpose and provenance", "typed columns and units", "records", "data dictionary", "quality checks", "version and scope"],
+      "layout": "One record per row in working data; display tables can group information without corrupting the underlying dataset.",
+      "formats": ["XLSX", "CSV", "JSON", "HTML or PDF snapshot"],
+      "checks": ["no row loss", "identifiers preserve leading zeroes", "dates and nulls explicit", "CSV formula injection handled", "wide data remains usable"],
+      "resources": ["gov-spreadsheets", "json-schema", "w3c-tables", "exceljs"]
+    }
+  ]
+}

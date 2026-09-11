@@ -1,90 +1,85 @@
-# Document model and component catalog
+# Narrative document model
 
-`schemaVersion: 1` is a content model, independent of the report page size. The renderer accepts `.md`, `.markdown`, `.docx`, and a prepared `.json` document. The skill can choose richer layouts by editing prepared JSON; ordinary users do not need special markup.
+The professional route uses `schemaVersion: 2`, `kind: "document"`. It separates content from document-family layout. The [original v1 model](document-model-v1.md) and `--layout report-v1` remain available for the original Paper report.
 
-## Markdown
+## Select a family
 
-Use one `#` heading for the document title, `##` for main sections, `###` for numbered subsections, and `####` or deeper for unnumbered subheadings. Leading prose becomes an Overview section. Lists, emphasis, links, tables, code fences, images, and `[^note]` footnotes are supported. Notion-exported `<aside>` callouts are supported; their decorative emoji are replaced by the supplied component icon. Raw HTML is not executed.
+| Family | Reader's task | Structural expectation |
+| --- | --- | --- |
+| `memo` | Understand and decide | Compact masthead, decision first, continuous short sections |
+| `letter` | Receive correspondence | Sender, recipient, subject, greeting and supplied closing |
+| `business-plan` | Evaluate choices and execution | Assumptions, market, operations, economics and risks |
+| `report` | Understand evidence | Question, method, findings, limitations and references |
+| `board` | Prepare a governance decision | Recommendation, options, risks and authority |
+| `proposal` | Evaluate an engagement | Scope, deliverables, exclusions and supplied terms |
+| `legal` | Read supplied formal terms | Conventional flow, exact labels, no invented terms |
+| `sop` | Perform a controlled process | Prerequisites, owners, ordered steps and exceptions |
+| `case-study` | Evaluate an intervention | Context, action, evidence, outcome and limitations |
+| `pricing` | Compare commercial scope | Units, included/excluded work and comparable prices |
 
-Optional YAML frontmatter: `title`, `subtitle`, `eyebrow`, `summary`, `smallPrint`, `author`, `date`, `version`, `coverImage`, `darkPages` (boolean, default `true`), and `sources`. Put source entries in `sources` as objects with `title`, optional `item`, `url`, `label`, and `description`. Alternatively, an explicit Sources/References/Bibliography/Appendix section is moved to the appendix without inventing bibliography data.
+These are layout families, not drafting authority or exhaustive templates. The [taxonomy](research/document-taxonomy.json) covers additional types and specialist routes. Automatic classification is a fallback; review its reasons and override it where necessary.
 
-An optional fenced block with language `rovn` contains one JSON component as described below. This supports explicit author control and is not required for normal input.
+## Input and commands
 
-## Prepared JSON
+Markdown supports headings, paragraphs, lists, tables, code, links, images and notes through the existing parser. Use YAML frontmatter for `title`, `family`, and supplied metadata. DOCX import uses Mammoth and is not a faithful round-trip editing service.
+
+Professional v2 supports four nested heading levels beneath a section (HTML h3–h6, following the document h1 and section h2). Unusual sources needing a fifth nested level are rejected without producing a file; restructure only with author agreement or use a specialist route. The original v1 route is unchanged.
+
+```sh
+node scripts/render.mjs examples/professional/executive-memo.md --prepare output/working/memo.json
+node scripts/render.mjs output/working/memo.json --out output/pdf/memo.pdf --screenshots
+node scripts/render.mjs source.md --family proposal --out output/pdf/proposal.pdf
+node scripts/render.mjs examples/sample.md --layout report-v1 --dark-pages off --out output/pdf/original.pdf
+```
+
+Professional PDF generation needs `pdfinfo` on PATH; actual-page PNGs additionally need `pdftoppm`. These Poppler tools are separate from the npm/browser setup. Office commands and separate presentation/workbook schemas are in [Office formats](office-formats.md). Check supported components before requesting an export.
+
+## Schema v2
 
 ```json
 {
-  "schemaVersion": 1,
-  "metadata": { "title": "Report title", "author": "Supplied author" },
-  "options": { "darkPages": true },
-  "sections": [
-    {
-      "title": "First section",
-      "headerImage": "assets/bg2.png",
-      "blocks": [
-        { "type": "lead", "text": "A supplied section introduction." },
-        { "type": "heading", "level": 1, "text": "First subsection" },
-        { "type": "paragraph", "text": "The source argument, with **emphasis**." }
-      ]
-    }
-  ],
+  "schemaVersion": 2,
+  "kind": "document",
+  "metadata": {"title":"Decision requested","author":"Supplied author"},
+  "intent": {"family":"memo","audience":"Review committee","purpose":"Decision"},
+  "sections": [{"id":"decision","title":"Decision requested","blocks":[
+    {"type":"paragraph","text":"The supplied request, with **emphasis**."},
+    {"type":"key-values","items":[{"label":"Owner","value":"Supplied owner"}]}
+  ]}],
   "footnotes": {},
   "sources": [],
   "appendix": []
 }
 ```
 
-IDs, section letters and subsection numbers are generated. Keep generated IDs stable when editing a prepared model; new components may omit IDs. Inline `text` is Markdown; `html` is sanitized inline markup and takes precedence if both exist. When editing parsed paragraphs, update `html`, not an unused `text` field. Supported inline elements: emphasis, strong, links, inline code, superscript/subscript, strikethrough, and line breaks. Footnote references are `<span data-note="1">1</span>` and definitions are inline HTML keyed by that number in `footnotes`.
+Metadata supports title, subtitle, author, date, version, recipient, sender, subject, confidentiality, eyebrow, summary and smallPrint. Never invent a legal effective date, approval, author or version. Intent may include audience, purpose, readingMode, editable and confidentiality. Router reasons are diagnostic metadata, not content or evidence. Unknown document, metadata, intent and section fields are rejected.
 
-## Components
+Sections contain a string title (empty for untitled prose), stable optional ID, blocks, and optional boolean `pageBreakBefore`. Supplied IDs must be unique. `html` is sanitized inline markup and takes precedence over `text`; edit the active field. Ordinary `text` is inline Markdown; code text is literal. Legal labels are supplied strings. Local links use `#id` and must resolve. Migration from v1 removes report-generated section letters, subsection counters and Paper table-style variants; the selected professional family supplies its own styling. Supplied heading text, list markers, legal labels and cell contents remain. Use `report-v1` when its precise presentation contract is required.
 
-| Type | Fields | Paper template |
-| --- | --- | --- |
-| `paragraph` | `text` or `html`; optional margin `note` | Full-width body, 12 px Inter / 18 px line height |
-| `lead` | `text` or `html` | Section introduction with rule, 20 px light Crimson Pro |
-| `heading` | `text`, `level` (1 = numbered subsection, 2+ = subheading) | 24 px subsection or 20 px subheading |
-| `list-item` | `text`/`html`, `marker`, `depth` | 24 px marker slot, nested indentation |
-| `callout` | `variant` 1–6, `title`, `text`/`html`, optional `icon` and `note` | All six supplied callouts |
-| `cards` | `variant`, `items` (two or three objects with `title` and `text`/`html`), optional `note` | Filled/outlined or ruled blocks |
-| `table` | `headers`, `rows`, optional `variant` 1/2, `widths`, `note` | Rounded panel or ruled table; repeated header on continuation |
-| `code` | Literal `text`, optional `language` and `note` | 10 px Fragment Mono code panel |
-| `image` | `src`, `alt`, `caption`, optional `height`, `decorative`, `crop` | Rounded image and caption within main column |
-| `image-band` | `src`, `alt`, `caption`, optional `amberSrc`, `decorative`, `crop` | Bleeding image band with amber image beside it |
-| `image-column` | `blocks`, one or two `images`, optional `note` | 329 px text + 64 px gap + 259 px image column |
-| `rule` | None | Existing full-width separator |
+| Block | Fields |
+| --- | --- |
+| `paragraph`, `lead` | `text` or `html` |
+| `heading` | `text`, integer `level` 1–4 beneath the section heading |
+| `list-item` | `text`/`html`, supplied `marker`, `depth` |
+| `table` | `headers`, rectangular `rows`; optional `caption`, `widths`, `orientation`, `columnTypes`, `note` |
+| `code` | literal `text`, optional `language` |
+| `clause` | exact `label`, optional `title`, `text`/`html` |
+| `definition-list` | `items: [{term, definition}]` |
+| `key-values` | `items: [{label, value}]` |
+| `signature` | `parties: [{name, role?, organization?}]`, optional `caption` |
+| `page-break` | explicit break, no content |
+| `callout`, `cards`, `image`, `image-column`, `image-band`, `rule` | Existing shapes where supported by the selected adapter |
 
-Callout variants: 1 = compact ruled; 2 = neutral panel; 3 = neutral panel with icon; 4 = amber panel with icon; 5 = editorial ruled; 6 = ruled with icon. Callout icons come from the pinned local [Lucide Static](https://lucide.dev/guide/static) package. Use any kebab-case name, such as `shield-check`, `calendar-clock`, `search`, `graduation-cap`, or `triangle-alert`. Run `node scripts/list-icons.mjs SEARCH` to find valid names. Unknown names fail visibly.
+An adapter must reject a component or option it cannot preserve. A field in this shared model does not establish support in every output. Captions, notes, emphasis and links are content. Table orientation or weights must not be silently ignored where they affect readability.
 
-- With no `icon` field, variants 3, 4, and 6 automatically choose a contextual icon. Variants 1, 2, and 5 remain iconless.
-- `icon: "auto"` chooses from the callout title/body using deterministic keyword rules; the invoking agent should use an explicit name when its semantic judgment is more appropriate.
-- An explicit icon on an iconless variant selects the nearest designed icon-bearing variant: 1 → 6, 2 → 3, 5 → 6. Choose the variant intentionally when editing.
-- `icon: "none"` hides the icon while preserving its slot on icon-bearing variants. Use an iconless variant to omit the slot.
-- SVGs are embedded locally at the original 24 px size and 2 px stroke, with the exact light/dark palette. Cards retain their original Paper icons.
+Signature blocks supply blank presentation lines, not identity, authority, consent, signing status or electronic-signature validity.
 
-Example component: `{"type":"callout","variant":4,"icon":"shield-check","title":"Privacy","text":"Keep the supplied documents secure."}`.
+Note definitions are inline HTML keyed by ID; references use `<span data-note="1">1</span>`. Professional PDF currently uses linked **endnotes**, not page-associated footnotes. Use the original report route or a supported Word path when page footnotes are required, or obtain agreement to the endnote treatment. Keep every reference and definition; do not describe endnotes as page footnotes.
 
-Cards variants: `numbered`, `icons`, `ruled-numbered`, `ruled-icons`. Two or three cards are supported; larger groups should be split into multiple rows. Cards use the original neutral/amber/green/outline sequence and icons.
+Sources contain `title` and optional `item`, `url`, `label`, `description`. Keep supplied bibliographic details and qualifiers. Appendices are supplied blocks, not automatically generated research.
 
-Table cells and headings contain inline HTML. `widths` is an array of positive relative column weights. Three-column tables default to the source template's proportions; other column counts use equal shares. Wide or semantically complex tables may need editorial restructuring into multiple tables. No data may be discarded.
+## Evidence and limits
 
-Image paths can be relative to the input file or begin with `assets/` for bundled images. Cover/header imagery defaults to `assets/bg1.png`–`assets/bg4.png`. Agents may also search the web for imagery matching the warm, atmospheric, botanical/natural mood. Cover and section-header images must be visually reviewed as amber; body imagery may use complementary brand tones. ToC and appendix artwork remains fixed.
+Use [validation](validation.md) for tested behavior and [professional examples](../examples/professional/) for synthetic sources. Long tables, nested structures, citations, code, non-Latin text, equations, embedded objects, editable forms and prescribed formats need explicit capability checks. A short sample does not prove their support.
 
-For a reviewed custom cover, section header, or image-band amber panel, use an object instead of a bundled path:
-
-```json
-{"src":"images/amber-landscape.jpg","mood":"amber","sourceUrl":"https://example.com/original-image-page"}
-```
-
-This object is accepted in `metadata.coverImage`, `section.headerImage`, and `block.amberSrc`. `mood: "amber"` records the agent's visual review; it is not automated color classification. The renderer embeds the local image and preserves the object so prepared JSON remains portable across subsequent renders. Existing bundled paths remain supported. Unreviewed custom strings are rejected. Input charts/screenshots use contain by default; decorative images use cover. Web images must be downloaded locally before rendering. Retain source/creator/license details in an imagery record beside the prepared document and include any required attribution. Preparation embeds input images in the JSON; the output HTML embeds all fonts and images.
-
-## Dark pages
-
-Markdown frontmatter can set `darkPages: false` or `darkPages: true`; prepared JSON uses `options.darkPages`. The default is true. `--dark-pages on` or `--dark-pages off` overrides the input, including during `--prepare`. With off, every body page uses the light template; the cover/ToC/appendix compositions stay fixed. With on, approximately 20–25% of body pages use the supplied dark variants. The choice affects color, not pagination. The QA report records `darkPagesEnabled` and `darkBodyIndices`.
-
-## Pagination and errors
-
-The engine measures after fonts load, keeps headings with following content, splits rich text at rendered lines, repeats table headers, and retains component styling on continuations. Content fields are compared before and after pagination to detect loss or duplication. PDF dimensions are 612 × 792 points (US Letter), corresponding to 816 × 1056 CSS pixels.
-
-Cover text has a fixed composition. A title or supplied summary too large for the cover produces an error rather than smaller typography. Ask for a shorter display title or move supplied material into the body with permission. Extremely tall unsplittable images, unsupported embedded objects/equations, and footnotes that cannot fit their page produce errors requiring editorial handling; they are not silently omitted.
-
-The renderer preserves source text. Light editing and selecting richer templates are the invoking agent's responsibility. CLI-only use formats the source structure and honors explicit components; it does not call an LLM.
+Source-editable HTML is not a browser word processor. Native Office packages still require native visual review and installed fonts. Ordinary PDF export does not establish PDF/A, PDF/UA or PDF/X conformance.

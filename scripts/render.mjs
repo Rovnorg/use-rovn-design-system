@@ -4,28 +4,50 @@ import path from 'node:path';
 import { chromium } from 'playwright';
 import { createHash } from 'node:crypto';
 import { loadInput } from '../src/input.mjs';
+import { toProfessionalDocument, validateProfessionalDocument } from '../src/professional-model.mjs';
+import { renderProfessional } from '../src/professional-render.mjs';
 import { documentIcons } from '../src/icons.mjs';
 import { root, localizeDocument, serve, inlineAssets } from '../src/runtime.mjs';
 
 const args = process.argv.slice(2); const input = args.shift();
 const options = {}; for (let i = 0; i < args.length; i++) {
-  if (['--out', '--prepare', '--title', '--author', '--dark-pages'].includes(args[i])) {
+  if (['--out', '--prepare', '--title', '--author', '--dark-pages', '--family', '--layout'].includes(args[i])) {
     const key = args[i].slice(2); if (!args[i + 1] || args[i + 1].startsWith('--')) throw new Error('Missing value for ' + args[i]);
     options[key] = args[++i];
   }
   else if (args[i] === '--screenshots') options.screenshots = true;
   else throw new Error('Unknown argument: ' + args[i]);
 }
-if (!input) { console.log('Usage: npm run render -- document.md [--out output/pdf/document.pdf] [--prepare document.rovn.json] [--dark-pages on|off] [--screenshots]'); process.exit(0); }
+if (!input) { console.log('Usage: npm run render -- document.md [--out output/pdf/document.pdf] [--prepare document.rovn.json] [--family memo|business-plan|report|board|proposal|legal|letter|sop|case-study|pricing] [--layout professional-v2|report-v1] [--screenshots]'); process.exit(0); }
 let browser, server;
 try {
-  let doc = await loadInput(path.resolve(input));
+  const inputExtension = path.extname(input).toLowerCase();
+  const defaultsAreLegacy = options.layout === 'report-v1' || (inputExtension === '.json' && options.layout !== 'professional-v2');
+  let doc = await loadInput(path.resolve(input), { defaultMetadata: defaultsAreLegacy });
   if (options.title) doc.metadata.title = options.title;
   if (options.author) doc.metadata.author = options.author;
   if (options['dark-pages'] != null) {
     if (!['on', 'off'].includes(options['dark-pages'])) throw new Error('--dark-pages must be on or off.');
+    if (!doc.options) doc.options = {};
     doc.options.darkPages = options['dark-pages'] === 'on';
   }
+  if (options.layout && !['report-v1', 'professional-v2'].includes(options.layout)) throw new Error('--layout must be report-v1 or professional-v2.');
+  const extension = inputExtension;
+  // Existing prepared schema v1 documents remain byte-for-byte on the established report route.
+  const useProfessional = options.layout === 'professional-v2' || (!options.layout && doc.schemaVersion === 2) || (!options.layout && doc.schemaVersion === 1 && extension !== '.json');
+  if (useProfessional) {
+    if (options['dark-pages'] != null || doc.metadata.darkPages != null) throw new Error('dark pages are a report-v1 option and are not supported by professional-v2. Use --layout report-v1.');
+    const source = doc.schemaVersion === 2 ? validateProfessionalDocument(doc) : toProfessionalDocument(doc, { intent: options.family ? { family: options.family } : doc.metadata.intent || {} });
+    const professional = options.family && source.schemaVersion === 2 ? validateProfessionalDocument({ ...source, intent: { ...source.intent, family: options.family } }) : source;
+    if (options.prepare) {
+      const prepared = await localizeDocument(professional, input); await fs.mkdir(path.dirname(path.resolve(options.prepare)), { recursive: true });
+      await fs.writeFile(options.prepare, JSON.stringify(prepared, null, 2) + '\n'); console.log('Prepared ' + options.prepare); process.exit(0);
+    }
+    const out = path.resolve(options.out || path.join('output/pdf', path.basename(input).replace(/\.[^.]+$/, '') + '.pdf'));
+    const report = await renderProfessional(professional, { out, screenshots: options.screenshots, input });
+    console.log(JSON.stringify({ pdf: out, family: report.family, pages: report.pageCount, warnings: report.warnings || [] }, null, 2)); process.exit(0);
+  }
+  if (options.family) throw new Error('--family requires a professional-v2 document route. Use Markdown, DOCX, schemaVersion: 2, or --layout professional-v2.');
   if (options.prepare) { doc = await localizeDocument(doc, input); await fs.mkdir(path.dirname(path.resolve(options.prepare)), { recursive: true }); await fs.writeFile(options.prepare, JSON.stringify(doc, null, 2) + '\n'); console.log('Prepared ' + options.prepare); process.exit(0); }
   const out = path.resolve(options.out || path.join('output/pdf', path.basename(input).replace(/\.[^.]+$/, '') + '.pdf'));
   if (path.extname(out).toLowerCase() !== '.pdf') throw new Error('--out must end in .pdf');

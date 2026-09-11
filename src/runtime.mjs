@@ -10,10 +10,16 @@ export async function dataUrl(filename) {
 export async function localizeDocument(doc, inputPath) {
   const base = path.dirname(path.resolve(inputPath));
   async function image(src) {
+    if (typeof src !== 'string') throw new Error('Image source must be a local path or an embedded supported image.');
     if (/^data:image\/(png|jpeg|webp|gif);base64,/.test(src)) return src;
     if (/^https?:/i.test(src)) throw new Error(`Download this source image locally before rendering: ${src}`);
-    let filename = src.startsWith('/assets/') || src.startsWith('assets/') ? path.join(root, src.replace(/^\//, '')) : path.resolve(base, src);
+    const bundled = src.startsWith('/assets/') || src.startsWith('assets/');
+    let filename = bundled ? path.join(root, src.replace(/^\//, '')) : path.resolve(base, src);
     if (!['.png', '.jpg', '.jpeg', '.webp', '.gif'].includes(path.extname(filename).toLowerCase())) throw new Error('Unsupported image type: ' + src);
+    const [sourceRoot, assetRoot, realFile] = await Promise.all([fs.realpath(base), fs.realpath(path.join(root,'assets')), fs.realpath(filename)]);
+    const contained = [sourceRoot, assetRoot].some(approvedRoot => { const relative = path.relative(approvedRoot, realFile); return relative !== '..' && !relative.startsWith('..' + path.sep) && !path.isAbsolute(relative); });
+    if (!contained) throw new Error(`Image leaves its approved source directory: ${src}. Review the exact external file and copy it into the input directory if authorized.`);
+    filename = realFile;
     return dataUrl(filename);
   }
   const amber = new Set(['assets/bg1.png', 'assets/bg2.png', 'assets/bg3.png', 'assets/bg4.png']);

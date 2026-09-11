@@ -10,11 +10,14 @@
   "scripts": {
     "build:templates": "node scripts/build-templates.mjs",
     "render": "node scripts/render.mjs",
+    "export:office": "node scripts/export-office.mjs",
     "test": "node --test tests/*.test.mjs",
     "setup": "playwright install chromium"
   },
   "dependencies": {
+    "docx": "9.5.1",
     "esbuild": "0.28.2",
+    "exceljs": "4.4.0",
     "gray-matter": "4.0.3",
     "jsdom": "29.1.1",
     "lucide-static": "1.43.0",
@@ -22,6 +25,7 @@
     "markdown-it": "15.0.1",
     "markdown-it-footnote": "4.0.0",
     "playwright": "1.63.0",
+    "pptxgenjs": "4.0.1",
     "react": "19.2.8",
     "react-dom": "19.2.8",
     "sanitize-html": "2.17.7"

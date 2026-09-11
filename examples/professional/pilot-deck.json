@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 2,
+  "kind": "presentation",
+  "metadata": {"title": "Document pilot", "author": "Example programme office"},
+  "slides": [
+    {"layout":"title","title":"A document system for the reader's task","subtitle":"Synthetic pilot · September 2026","notes":"Training example only. No customer results, approvals or company traction are asserted."},
+    {"layout":"section","title":"The decision","body":"Approve preparation and review of six synthetic packages. Keep publication, procurement and legal execution outside the pilot.","notes":"The scope is proposed, not approved. Confirm reviewer capacity separately."},
+    {"layout":"two-column","title":"Match structure to purpose","left":{"heading":"Narrative files","items":["Memo: decision and next action","Plan: assumptions, milestones and risks","Agreement: supplied terms and clause labels"]},"right":{"heading":"Native editable files","items":["Word: paragraphs and tables","PowerPoint: slide text and shapes","Excel: typed inputs and formulas"]},"notes":"Do not convert arbitrary prose into slides or cells without an explicit model."},
+    {"layout":"data-table","title":"Evidence required at each gate","table":{"headers":["Gate","Evidence","Owner"],"rows":[["Preparation","Source, purpose and formats","Coordinator"],["Review","Integrity and visual checks","Reviewer"],["Handoff","Approval and exact files","Sponsor"]]},"notes":"These are proposed roles in a fictional process."},
+    {"layout":"two-column","title":"What a passing package must show","left":{"heading":"Content","items":["Every supplied fact and qualification retained","Code, links and legal labels intact","No invented dates, signatures or outcomes"]},"right":{"heading":"Files","items":["No clipping or unreadable tables","Editable objects remain editable","Native-rendering limits disclosed"]},"notes":"Package validation alone does not establish visual quality or accessibility conformance."},
+    {"layout":"closing","title":"Review the files, then decide","contact":"Internal training example — not for publication","notes":"No contact address or external distribution is authorized."}
+  ]
+}

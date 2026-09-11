@@ -1,86 +1,94 @@
 # Rōvn document system
 
-Generate branded PDFs from Markdown or DOCX using the supplied Paper report templates. Includes a shared skill for Claude Code and Codex, local fonts/images, fixed component styles, measured pagination, automatic contents, footnotes, references, and dark-page scheduling.
+A shared agent skill and local renderer for purpose-specific documents. Create PDF and source-editable HTML, export supported narrative content to Word, and use explicit presentation and workbook models for PowerPoint and Excel.
+
+This is a fork of [jkou-cmd/use-rovn-design-system](https://github.com/jkou-cmd/use-rovn-design-system), extending its original Paper-derived report renderer. It is public on GitHub, but **does not carry a blanket open-source license**. Read [attribution and usage restrictions](NOTICE.md), especially for brand imagery.
+
+## Supported scope
+
+| Route | Scope |
+| --- | --- |
+| Professional narrative → PDF / HTML | Memo, letter, business plan, report, board paper, proposal, legal text, SOP, case study and pricing |
+| Narrative v2 → DOCX | Native paragraphs, headings, tables, links, notes and page fields; unsupported structures are rejected |
+| Presentation v2 → PPTX | Five fixed 16:9 layouts with native text, tables, shapes and speaker notes |
+| Workbook v2 → XLSX | Typed cells, sheets, number formats, formulas and explicitly supplied cached results |
+| Original `report-v1` → PDF / HTML | Original Paper report, including its cover, section numbering, imagery and dark-page controls |
+
+The [research taxonomy](docs/research/document-taxonomy.json) maps 200 document types across 21 families. It is a routing resource, not a claim that every type or extension is implemented. See the [resource catalog](docs/research/research-and-resource-catalog.md) and [file-format map](docs/research/file-format-landscape.md) for specialist routes.
 
 ## Setup
 
-Requires Node.js 22 or newer. The repository is public; agents can clone and set it up without GitHub authentication.
+Prerequisites:
+
+- Node.js 22 or newer and npm.
+- Poppler's `pdfinfo` on `PATH` for professional PDF generation; `pdftoppm` for actual-page PNG previews and the complete test suite.
+- A supported local environment for Playwright Chromium. Browser system libraries may need installation on Linux.
 
 ```sh
-git clone https://github.com/jkou-cmd/use-rovn-design-system.git
+git clone https://github.com/Rovnorg/use-rovn-design-system.git
 cd use-rovn-design-system
-```
-
-```sh
 npm ci
 npm run setup
+npm test
 ```
 
-Open this repository in Claude Code and invoke `/use-rovn-design-system path/to/document.md`. In Codex, invoke `$use-rovn-design-system` and provide the document path. The canonical skill is in `.agents/skills/`; the Claude entry point is in `.claude/skills/`.
+`npm run setup` installs Playwright Chromium, not Poppler, desktop Office, or Office fonts. After setup, bundled assets work offline. Normal rendering needs no Paper connection or paid model API. The invoking agent performs any separately requested content editing; this package is a repository skill and CLI, not a hosted service or MCP server.
 
-No Paper connection is required to generate a document. After setup, bundled assets work offline. No paid model API is called by the renderer; the invoking agent handles optional content editing and component selection.
+## Use with agents
 
-## Using it with agents
+Start Codex or Claude Code in this checkout:
 
-Start Claude Code or Codex in this checkout after setup. Give the agent the document path and preferences in the same request:
+- Codex: `$use-rovn-design-system Turn examples/professional/executive-memo.md into a PDF and editable Word document. Preserve the content and review the outputs.`
+- Claude Code: `/use-rovn-design-system examples/professional/executive-memo.md — create a PDF and editable Word document.`
 
-- Claude Code: `/use-rovn-design-system /absolute/path/report.md — choose suitable Lucide icons and turn dark pages off`
-- Codex: `$use-rovn-design-system Turn /absolute/path/report.md into a PDF with suitable Lucide icons and dark pages on.`
+The canonical skill is [`.agents/skills/use-rovn-design-system/SKILL.md`](.agents/skills/use-rovn-design-system/SKILL.md). The [Claude entry point](.claude/skills/use-rovn-design-system/SKILL.md) delegates to it. If discovery does not refresh after cloning, start a new session in this checkout.
 
-For another agent with file and command access, use:
+To share it across projects or agent tools, keep one complete checkout and point each agent at its canonical skill by absolute path:
 
-> Read `/absolute/path/use-rovn-design-system/.agents/skills/use-rovn-design-system/SKILL.md` and follow it to create a branded PDF from `/absolute/path/report.md`. Choose suitable Lucide callout icons. Turn occasional dark pages off. Use the renderer in that checkout and review every page.
+> Read `/absolute/path/use-rovn-design-system/.agents/skills/use-rovn-design-system/SKILL.md` and use that checkout to render my document. Preserve the supplied content, select the appropriate family, and review every output page.
 
-Keep the whole repository available: copying only `SKILL.md` omits required templates, code, fonts, and images. An agent working in another project can read the skill by absolute path and run the renderer from this checkout. A chat-only agent needs a local runner with filesystem/shell access. Paper MCP is needed only for explicit design updates. This is a repository skill and CLI, not a hosted MCP server.
+Do not copy only `SKILL.md`: its relative references require the full repository, renderer, fonts and assets. A chat-only agent needs a local runner with file and command access. This repository does not change global agent configuration automatically.
 
-To update a clean checkout, run `git pull --ff-only` and `npm ci`; rerun `npm run setup` when Playwright changes. If the skill does not appear after cloning, start a new agent session from this folder.
+## Generate documents
 
-## Icons and dark pages
-
-Tell the agent the desired icon meaning and dark-page preference in plain language. Explicit component control is also available:
-
-```json
-{"type":"callout","variant":4,"icon":"shield-check","title":"Privacy","text":"Keep the supplied documents secure."}
-```
-
-Use any installed [Lucide](https://lucide.dev/guide/static) icon name, `auto`, or `none`. Search names with `node scripts/list-icons.mjs shield`. Icon SVGs are embedded locally; no CDN is needed.
+Run commands from the repository root. Markdown and DOCX input use the professional route by default; prepared v1 JSON retains its legacy route unless explicitly migrated.
 
 ```sh
-npm run render -- document.md --dark-pages off
-npm run render -- document.md --dark-pages on
+# Prepare and inspect a narrative model, then produce PDF and actual-page PNGs.
+node scripts/render.mjs examples/professional/executive-memo.md --prepare output/working/memo.json
+node scripts/render.mjs output/working/memo.json --out output/memo.pdf --screenshots
+
+# Export native editable formats with the appropriate model.
+node scripts/export-office.mjs output/working/memo.json --out output/memo.docx
+node scripts/export-office.mjs examples/professional/pilot-deck.json --out output/pilot.pptx
+node scripts/export-office.mjs examples/professional/pricing-workbook.json --out output/pricing.xlsx
+
+# Select the original report layout explicitly when wanted.
+node scripts/render.mjs examples/sample.md --layout report-v1 --dark-pages off --out output/original-report.pdf
 ```
 
-Or put `darkPages: false` in the Markdown's YAML frontmatter. Prepared JSON uses `"options": { "darkPages": false }`. The CLI overrides the document setting. Dark pages are on by default; turning them off keeps every body page light and preserves pagination.
+PDF rendering also writes a self-contained HTML source and `.qa.json`. `--screenshots` adds PNGs of actual PDF pages. Choose `--family proposal` (or another supported family) when automatic classification is unsuitable. See [narrative fields and commands](docs/document-model.md), [Office schemas](docs/office-formats.md), and the [legacy report guide](.agents/skills/use-rovn-design-system/LEGACY_REPORT.md).
 
-## Web imagery
+The original report's dark pages, lettered sections, fixed artwork and Lucide callouts are layout-specific, not universal document defaults. Explicit Paper-template updates use the [sync procedure](docs/paper-sync.md). Responsive websites and app layouts are outside this renderer's scope.
 
-Agents may find and download additional imagery from the web when it matches the Rōvn mood: warm, atmospheric, natural/botanical imagery with soft light. Cover and section headers stay amber; ToC and appendix artwork stays fixed. Chosen images are downloaded and embedded, with source and attribution details retained beside the prepared document. See [custom imagery fields](docs/document-model.md) for the renderer format.
+## Examples and verification
 
-## Direct CLI
+The [professional example library](examples/professional/) contains synthetic narrative, presentation and workbook inputs. The legal reference is a clearly attributed excerpt with [source provenance](examples/professional/sources/commonpaper-nda/PROVENANCE.md), not a complete or signing-ready agreement.
 
 ```sh
-npm run render -- examples/sample.md --screenshots
-npm run render -- path/to/document.docx --out output/pdf/report.pdf
+node scripts/build-professional-gallery.mjs output/gallery
 ```
 
-Each render produces a PDF, self-contained editable HTML, and `.qa.json`. `--screenshots` also writes page PNGs. A prepared content model gives the skill control over richer components:
+The [dated validation record](docs/validation.md) separates automated checks, actual-page review, native application checks and remaining limits. The professional upgrade's complete suite passed 30 tests; its ten narrative samples produced 22 reviewed PDF pages. These are bounded sample results, not universal quality or compatibility guarantees.
 
-```sh
-npm run render -- document.md --prepare output/working/document.rovn.json
-npm run render -- output/working/document.rovn.json --out output/pdf/document.pdf
-```
+Important limits:
 
-Preparation embeds source images, so the prepared JSON can be relocated without breaking document-relative paths. See [the content model](docs/document-model.md) for component fields and limitations.
+- Word export rejects unsupported images, cards, callouts and table-layout options. DOCX import is not lossless round-trip editing.
+- Slides and workbooks require their own models; arbitrary prose is not silently converted into slides or cells. ExcelJS writes supplied formula caches and does not recalculate them.
+- Native Office fonts are declared, not embedded. Installed fonts and target-application review determine visual fidelity.
+- Professional PDF notes are linked endnotes. No PDF/A, PDF/UA, PDF/X, assistive-technology conformance or legal signing-readiness certification is claimed.
+- Four transitive dependency audit findings remain in the dated audit. The [Office documentation](docs/office-formats.md) records advisories and supported-path constraints; this is not a clean security audit.
 
-## Design contract
+Review every actual page, preserve source content and evidence, and disclose unsupported requirements. Public examples do not establish company traction, commercial terms, approvals or policy.
 
-- US Letter, 816 × 1056 CSS pixels, with the exact Paper typography, grid, colors, SVGs, and component treatments.
-- Unnumbered cover, ToC numbered 1, main sections A/B/C and subsections A1/A2.
-- Main sections start on new pages with amber image headers. ToC and appendix artwork stays fixed.
-- Cover subtitle, eyebrow, summary, and small print appear only when supplied.
-- With dark pages enabled, approximately 20–25% of body pages are dark, spread without adjacent dark pages. Cover, ToC, and appendix are excluded; fewer than four body pages get no dark pages. Integer rounding applies when the range cannot be met exactly.
-- Content can grow and continue across pages; typography does not shrink. The renderer fails on missing assets, unsupported content, content lost during pagination, or unfit components.
-
-Template capture and comparison live in `design/paper/`. Read [Paper sync](docs/paper-sync.md) before adopting design changes. [Validation](docs/validation.md) records the current evidence and limits. Future slide formats can share content and assets while adding their own approved layouts.
-
-Lucide attribution is in `licenses/lucide.txt`. Font licenses are bundled under `assets/fonts/`. Supplied brand imagery is included for this project's use; this repository does not grant additional redistribution rights to imagery.
+To update a clean checkout, use `git pull --ff-only`, then `npm ci`; rerun browser setup when Playwright changes. Preserve local changes before updating.

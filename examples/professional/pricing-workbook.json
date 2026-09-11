@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 2,
+  "kind": "workbook",
+  "metadata": {"title":"Harbor Studio illustrative pricing model","author":"Example training team"},
+  "sheets":[
+    {"name":"Read me","columns":[{"key":"topic","header":"Topic","type":"text","width":24},{"key":"detail","header":"Detail","type":"text","width":80}],"rows":[
+      {"topic":"Status","detail":"Synthetic example. Not Rōvn pricing, financial advice, forecast, or an offer."},
+      {"topic":"Units","detail":"All prices are illustrative USD per package. Tax and payment terms are unspecified."},
+      {"topic":"Formula behavior","detail":"Formula results are supplied caches checked arithmetically for this fixture. The export library does not calculate them. Confirm recalculation in the intended spreadsheet application."},
+      {"topic":"Assumptions","detail":"Package volumes are hypothetical. There is no evidence of actual orders or revenue."},
+      {"topic":"Use","detail":"Edit the input cells in Pricing, recalculate, and inspect results before relying on them."}
+    ]},
+    {"name":"Pricing","columns":[{"key":"package","header":"Package","type":"text","width":22},{"key":"price","header":"Price USD","type":"currency","width":18},{"key":"volume","header":"Hypothetical units","type":"number","width":24},{"key":"total","header":"Illustrative total USD","type":"formula","width":28}],"rows":[
+      {"package":"Memo","price":200,"volume":3,"total":{"formula":"B2*C2","result":600}},
+      {"package":"Plan","price":800,"volume":2,"total":{"formula":"B3*C3","result":1600}},
+      {"package":"Package","price":1000,"volume":1,"total":{"formula":"B4*C4","result":1000}}
+    ]},
+    {"name":"Checks","columns":[{"key":"check","header":"Check","type":"text","width":36},{"key":"expected","header":"Expected supplied value","type":"number","width":28},{"key":"formula","header":"Formula result cache","type":"formula","width":28}],"rows":[
+      {"check":"Total illustrative value","expected":3200,"formula":{"formula":"SUM(Pricing!D2:D4)","result":3200}},
+      {"check":"Difference from expected","expected":0,"formula":{"formula":"C2-B2","result":0}}
+    ]}
+  ]
+}
