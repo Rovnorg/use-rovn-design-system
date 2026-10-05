@@ -1,49 +1,206 @@
-@page { size: Letter; margin: .68in .72in .7in; @bottom-right { content: counter(page); font: 9pt Inter; color: #706a61; } }
-@page wide { size: Letter landscape; margin: .55in .6in; }
-@page proposal { size: Letter; margin: .55in .72in; }
-.family-proposal { page:proposal; }
-* { box-sizing: border-box; }
+/* Rōvn editorial system. Original Paper identity, contemporary white canvas. */
+@page { size:Letter; margin:.6in .65in .64in; @bottom-left { content:"Rōvn"; font:500 9pt Crimson; color:#6a6d72; } @bottom-right { content:counter(page); font:8pt FragmentMono; color:#6a6d72; } }
+@page wide { size:Letter landscape; margin:.55in .6in; }
+:root { --ink:#15181e; --muted:#62656b; --line:#d9dde3; --accent:#9c590a; --amber:#eaa544; --surface:#fff; --gutter:.55in; }
+* { box-sizing:border-box; }
+html,body { color:var(--ink); background:var(--surface); }
+body { margin:0; font:400 10.3pt/1.53 Inter,Arial,sans-serif; font-synthesis:none; font-optical-sizing:auto; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+h1,h2,h3,h4,h5,h6 { color:var(--ink); line-height:1.16; text-wrap:balance; }
+a { color:inherit; text-decoration:underline; text-decoration-thickness:.6px; text-underline-offset:3px; overflow-wrap:anywhere; }
+p { orphans:3; widows:3; }
+figure,dl { margin:0; }
+hr { border:0; border-top:1px solid var(--line); margin:.24in 0; }
 .manual-break { break-before:page!important; }
-.notes ol { list-style:none; padding-left:0; }
-.note-label { font-weight:600; }
-.section h4,.section h5,.section h6 { break-after:avoid; }
-.notes>h2,.appendix>h2 { break-after:avoid-page; page-break-after:avoid; }
-.family-pricing .section>header,.family-case-study .section>header { margin:.1in 0 .08in!important; }
-.family-pricing .cover,.family-case-study .cover { padding-top:.2in!important; }
-.family-pricing .section p,.family-case-study .section p { margin:.075in 0; }
-.family-pricing .table-wrap,.family-case-study .table-wrap { margin:.12in 0; }
-.family-proposal .section>header { margin:.08in 0!important; }
-.family-case-study .section>header { margin:.06in 0!important; }
-.family-case-study .section p { margin:.05in 0; }
-.family-case-study .cover { padding-top:.1in!important; }
-.family-proposal .table-wrap { margin:.1in 0; }
-.family-proposal .section p { margin:.075in 0; }
-.family-proposal .cover { padding-top:.22in!important; }
-.metadata { display:flex; flex-wrap:wrap; gap:.1in .3in; margin:.16in 0; font:9pt/1.35 Inter,Arial,sans-serif; }
-.metadata dt { font-size:7.5pt; font-weight:600; text-transform:uppercase; color:#706a61; }
-.metadata dd { margin:.025in 0 0; }
-.captioned-block { margin:.15in 0; }
-.captioned-block>figcaption { font-weight:600; font-size:9pt; margin-bottom:.06in; }
-.code-language { display:block; font:8pt Inter,Arial,sans-serif; color:#706a61; margin-bottom:.04in; }
-.family-letter .section>header { display:block!important; }
-html { color: #27231e; background: #fffdfa; }
-body { margin: 0; font: 10.5pt/1.55 Inter, Arial, sans-serif; }
-h1,h2,h3 { color: #1d1915; line-height: 1.12; }
-a { color: #9d5711; text-decoration-thickness: .7px; text-underline-offset: 2px; }
-.cover { min-height: 3.25in; padding: 1.05in .2in .4in; border-bottom: 5px solid #cd7d1f; break-after: page; background: linear-gradient(135deg,#fffdfa,#f6ecdf); }
-.eyebrow,.plan-heading small,.case-heading small,.pricing-heading small,.board-heading small,.sop-heading small { font-size: 8pt; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: #a85d15; }
-.cover h1 { font: 600 34pt/1.04 Crimson, Georgia, serif; max-width: 7.2in; margin: .22in 0 .12in; }
-.cover>p { font: 14pt/1.45 Crimson, Georgia, serif; max-width: 6.2in; margin: 0; }
-.cover dl { display:flex; gap:.38in; flex-wrap:wrap; margin:.42in 0 0; }.cover dl div { min-width:1.1in; }.cover dt { font-size:8pt; letter-spacing:.06em; text-transform:uppercase; color:#706a61; }.cover dd { margin:.04in 0; font-size:9pt; }
-.contents { break-after: page; padding:.1in 0; }.contents h2,.appendix>h2,.notes>h2 { font:600 22pt Crimson,Georgia,serif; margin:0 0 .22in; }.contents ol { list-style:none; padding:0; margin:0; columns:2; column-gap:.55in; }.contents li { break-inside:avoid; border-top:1px solid #ded7cc; padding:.1in 0; }.contents a { display:block; color:inherit; text-decoration:none; }
-.sheet { break-before:auto; }.section>header { display:grid; grid-template-columns:.42in 1fr; gap:.12in; align-items:baseline; border-bottom:1px solid #c9bcae; padding:0 0 .13in; margin:.3in 0 .26in; break-after:avoid-page; break-inside:avoid-page; page-break-after:avoid; page-break-inside:avoid; }.section>header span { font-size:9pt; font-weight:700; color:#a85d15; }.section>header h2 { font:600 24pt Crimson,Georgia,serif; margin:0; }
-.section h3 { font:650 14pt Crimson,Georgia,serif; margin:.28in 0 .09in; break-after:avoid; }.section p { margin:.1in 0; }.lead { font:400 15pt/1.32 Crimson,Georgia,serif; max-width:6.7in; margin:.05in 0 .24in!important; }
-.list-item { display:grid; grid-template-columns:.2in 1fr; gap:.08in; margin:.06in 0; break-inside:avoid; }.depth-1{margin-left:.22in}.depth-2{margin-left:.44in}
-.callout { margin:.2in 0; padding:.16in .19in; border-left:4px solid #cd7d1f; background:#f8f1e8; break-inside:avoid; }.callout strong{display:block;margin-bottom:.04in}.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(2in,1fr));gap:.12in;margin:.18in 0}.cards article{padding:.17in .15in;border:1px solid #d7cabe;break-inside:avoid}.cards article>span{color:#a85d15;font-weight:700}.cards h3{font:650 12pt Inter;margin:.08in 0}
-.table-wrap{margin:.2in 0}.table-wrap figcaption{font-weight:650;margin-bottom:.07in}.table-wrap small{display:block;margin-top:.06in;color:#706a61}table{width:100%;border-collapse:collapse;font-size:9pt;line-height:1.36}thead{display:table-header-group;background:#f3e8da}th{text-align:left;font-weight:700}th,td{padding:.075in .08in;border-bottom:1px solid #ded7cc;vertical-align:top}th.number,th.currency,th.percent,td.number,td.currency,td.percent{text-align:right;font-variant-numeric:tabular-nums}tr{break-inside:avoid}.landscape-sheet{page:wide;break-before:page;break-after:page}
-pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#27231e;color:#fffaf1;padding:.16in;font:8.5pt/1.45 FragmentMono,monospace;break-inside:avoid}.image,.image-band{margin:.2in 0;break-inside:avoid}.image img,.image-band img{display:block;max-width:100%;max-height:5.8in;margin:auto}.image figcaption,.image-band figcaption{font-size:8.5pt;color:#706a61;margin-top:.05in}.image-column{display:grid;grid-template-columns:1.2fr .8fr;gap:.25in;margin:.22in 0}.image-column img{display:block;max-width:100%;max-height:4.8in;margin-bottom:.1in}
-.key-values{display:grid;grid-template-columns:repeat(auto-fit,minmax(1.8in,1fr));gap:.1in .18in;margin:.2in 0}.key-values div{border-top:2px solid #cd7d1f;padding-top:.06in}.key-values dt{font-size:8pt;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#706a61}.key-values dd{margin:.03in 0}.definitions>div{display:grid;grid-template-columns:1.4in 1fr;gap:.14in;padding:.11in 0;border-bottom:1px solid #ded7cc}.definitions dt{font-weight:700}.definitions dd{margin:0}.clause{display:grid;grid-template-columns:.42in 1fr;column-gap:.08in;margin:.18in 0;break-inside:avoid-page;page-break-inside:avoid}.clause h3{grid-column:1/3;font:650 11pt Inter;margin:0 0 .06in}.clause h3 span{display:inline-block;width:.42in;margin-right:.08in}.clause>div{grid-column:2}.signatures{break-before:page;margin-top:.4in}.signatures>div{display:grid;grid-template-columns:repeat(auto-fit,minmax(2.55in,1fr));gap:.45in}.signatures section{display:flex;flex-direction:column;gap:.05in;min-height:1.35in}.sign-line{height:.55in;border-bottom:1px solid #27231e}.signatures span,.signatures small{font-size:8.5pt;color:#706a61}.appendix,.notes{break-before:page}.sources{padding-left:.2in}.sources li{padding:.1in 0;border-bottom:1px solid #ded7cc}.notes li{margin:.08in 0}.note-ref{font-size:8pt;line-height:0;vertical-align:super}.block-note{display:block;margin-top:.05in;color:#706a61;font-size:8.5pt}
-.family-legal{font-family:Crimson,Georgia,serif;font-size:11.2pt;line-height:1.52;color:#111;background:#fff}.family-legal .legal-heading{margin:0 0 .35in;border-bottom:1px solid #111;padding-bottom:.14in}.family-legal .legal-heading>div,.family-legal .legal-heading small{font:9.5pt Inter,Arial,sans-serif}.family-legal .legal-heading h1{font:600 18pt/1.2 Crimson,Georgia,serif;margin:.18in 0 0}.family-legal .legal-heading p{margin:.05in 0}.family-legal .sheet{break-before:auto}.family-legal .section>header{grid-template-columns:1fr;border:0;margin:.25in 0 .18in}.family-legal .section>header span{display:none}.family-legal .section>header h2{font-size:13pt;text-transform:uppercase;letter-spacing:.02em}.family-legal .callout,.family-legal .cards,.family-legal .image-band{border-left:0;background:transparent;padding:0}.family-legal a{color:inherit}
-.family-memo .cover{min-height:1.2in;padding:.38in 0 .18in;break-after:auto}.family-memo .cover h1{font-size:25pt;margin:.12in 0 .06in}.family-memo .cover dl{margin:.16in 0 0}.family-memo .sheet{break-before:auto}.family-memo .section>header{grid-template-columns:1fr;margin:.2in 0 .14in}.family-memo .section>header span{display:none}.family-board .cover{background:#fffdf9;border-color:#e5a23d}.family-board .key-values{grid-template-columns:repeat(4,1fr)}
-.family-proposal .cover{min-height:1.45in;padding:.38in .2in .2in;break-after:auto;background:linear-gradient(135deg,#fbf5ec,#fffdfa 58%,#efe1ce)}.family-proposal .cover h1{font-size:28pt;margin:.1in 0}.family-proposal .cover dl{margin:.15in 0 0}.family-proposal .sheet{break-before:auto}.proposal-heading{display:flex!important;justify-content:space-between;align-items:end;background:#29241f;color:#fff;border:0!important;padding:.22in .25in!important}.proposal-heading h2{color:#fff;margin:.04in 0 0}.proposal-heading small{letter-spacing:.1em;text-transform:uppercase;color:#e6ab61}.proposal-heading>span{font:24pt Crimson,Georgia,serif}
-.plan-heading{display:grid!important;grid-template-columns:1.35in 1fr!important;gap:.2in!important;border:0!important;padding:0!important;align-items:end}.plan-heading>span{font:600 52pt/.8 Crimson,Georgia,serif;color:#d8b58d;letter-spacing:-.08em}.plan-heading h2{font-size:30pt!important;margin:.06in 0 0}.case-heading{display:block!important;border-left:5px solid #945c2a!important;border-bottom:0!important;padding:.06in 0 .06in .16in!important}.case-heading h2,.pricing-heading h2,.board-heading h2{margin:.06in 0 0}.sop-heading{display:grid!important;grid-template-columns:.45in 1fr!important;gap:.13in!important;border:0!important;background:#f5eadc;padding:.14in!important}.sop-heading>span{display:grid;place-items:center;width:.32in;height:.32in;border-radius:50%;background:#cd7d1f;color:#fff;font-weight:700}.sop-heading h2{margin:.03in 0 0!important;font-size:18pt!important}.pricing-heading,.board-heading{display:block!important;border-bottom:0!important;padding-top:.1in!important}.pricing-heading{border-top:3px solid #27231e!important}.board-heading{border-top:3px solid #e5a23d!important}.family-case-study .cover{border-color:#945c2a}.family-pricing table th{background:#27231e;color:#fff}.family-letter .letter-heading{min-height:2.5in;padding:.3in 0 .2in;border-bottom:2px solid #cd7d1f}.family-letter .letter-heading p{margin:.03in 0}.family-letter .letter-heading h1{font:600 18pt Crimson,Georgia,serif;margin:.32in 0 0}.family-letter .sheet{break-before:auto}.family-letter .section>header{display:none}
+.brandline { display:flex; align-items:center; justify-content:space-between; gap:.2in; margin:0 0 .38in; }
+.brandline svg { display:block; width:1.37in; height:.342in; flex:0 0 auto; }
+.document-kind { color:var(--muted); font:500 7.5pt/1.2 Inter,Arial,sans-serif; letter-spacing:.12em; text-transform:uppercase; text-align:right; }
+.cover,.letter-heading,.legal-heading { padding:0 0 .24in; margin:0 0 .27in; border-bottom:1px solid var(--line); }
+.eyebrow { font:500 8pt/1.4 Inter,Arial,sans-serif; letter-spacing:.1em; text-transform:uppercase; color:var(--accent); margin:.08in 0 .12in; }
+.cover h1 { font:350 44pt/.98 Crimson,Georgia,serif; letter-spacing:-.035em; max-width:6.7in; margin:0 0 .19in; }
+.cover>p { font:400 11pt/1.5 Inter,Arial,sans-serif; color:var(--muted); max-width:5.9in; margin:.08in 0; }
+.cover .cover-summary { font:400 18pt/1.24 Crimson,Georgia,serif; color:var(--ink); max-width:6in; margin-top:.2in; }
+.cover-small-print { display:block; color:var(--muted); font-size:8pt; margin-top:.15in; }
+.metadata { display:flex; flex-wrap:wrap; gap:.1in .3in; margin:.25in 0 0; font:400 8pt/1.4 Inter,Arial,sans-serif; }
+.metadata div { min-width:0; }
+.metadata dt { font-size:6.8pt; font-weight:500; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); }
+.metadata dd { margin:.04in 0 0; }
+.section { margin-top:.27in; }
+.section>header { display:flex; align-items:baseline; gap:.12in; margin:0 0 .13in; break-after:avoid-page; break-inside:avoid-page; }
+.section>header>span { flex:0 0 .43in; font:350 23pt/1 Crimson,Georgia,serif; color:var(--accent); letter-spacing:-.03em; }
+.section>header h2 { font:450 22pt/1.12 Crimson,Georgia,serif; letter-spacing:-.02em; margin:0; }
+.section>header small { display:block; font:500 7pt/1.4 Inter,Arial,sans-serif; letter-spacing:.09em; text-transform:uppercase; color:var(--accent); margin-bottom:.065in; }
+.section-body { margin-left:var(--gutter); min-width:0; }
+.section h3 { font:550 11pt/1.3 Inter,Arial,sans-serif; margin:.2in 0 .075in; }
+.section h4,.section h5,.section h6 { font-size:10.5pt; font-weight:550; margin:.17in 0 .07in; }
+.section h3,.section h4,.section h5,.section h6 { break-after:avoid-page; }
+.section p { margin:.09in 0; }
+.section-body>:first-child { margin-top:0; }
+.lead { font:400 19pt/1.22 Crimson,Georgia,serif; letter-spacing:-.01em; margin:.04in 0 .21in!important; }
+.list-item { display:grid; grid-template-columns:.16in 1fr; gap:.08in; margin:.065in 0; break-inside:avoid; }
+.list-item>span { color:var(--accent); }
+.callout { margin:.23in 0; padding:.04in 0 .04in .2in; border-left:3px solid var(--amber); break-inside:avoid; }
+.callout strong { display:block; margin-bottom:.075in; font:500 17pt/1.15 Crimson,Georgia,serif; }
+.callout.variant-2 { background:var(--ink); color:#fff; border-left:0; padding:.23in .25in; }
+.callout.variant-2 strong { color:var(--amber); }
+.callout.variant-2 .block-note { color:#fff; }
+.callout.variant-3 { background:var(--amber); color:var(--ink); border-left:0; padding:.23in .25in; }
+.callout.variant-3 .block-note { color:var(--ink); }
+.cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(1.65in,1fr)); gap:.2in; margin:.23in 0; }
+.cards article { padding:.14in 0 0; border-top:1px solid var(--line); break-inside:avoid; }
+.cards article>span { font:350 26pt/1 Crimson,Georgia,serif; color:var(--accent); }
+.cards h3 { font:500 17pt/1.12 Crimson,Georgia,serif; margin:.11in 0 .08in; }
+.cards article>div { font-size:9.5pt; }
+.cards>.block-note { grid-column:1/-1; }
+.table-wrap { margin:.21in 0; }
+.table-wrap figcaption,.captioned-block>figcaption { font-size:8.5pt; font-weight:550; margin-bottom:.095in; }
+.table-wrap small { display:block; margin-top:.085in; color:var(--muted); font-size:8pt; }
+table { width:100%; border-collapse:collapse; font-size:9pt; line-height:1.42; }
+thead { display:table-header-group; background:var(--surface); }
+th { text-align:left; font-size:7.5pt; font-weight:600; letter-spacing:.015em; border-bottom:1px solid var(--ink); color:var(--ink); }
+th,td { padding:.11in .08in; vertical-align:top; }
+td { border-bottom:1px solid var(--line); }
+th:first-child,td:first-child { padding-left:0; }
+th:last-child,td:last-child { padding-right:0; }
+th.number,th.currency,th.percent,td.number,td.currency,td.percent { text-align:right; font-variant-numeric:tabular-nums; }
+tr { break-inside:avoid; }
+.landscape-sheet { page:wide; break-before:page; break-after:page; }
+pre { white-space:pre-wrap; overflow-wrap:anywhere; border:1px solid var(--line); background:var(--surface); color:var(--ink); padding:.16in; font:8.3pt/1.5 FragmentMono,monospace; break-inside:avoid; }
+.code-language { display:block; font:7.5pt FragmentMono,monospace; color:var(--muted); margin-bottom:.05in; }
+.captioned-block { margin:.18in 0; }
+.image,.image-band { margin:.23in 0; break-inside:avoid; }
+.image img,.image-band img { display:block; max-width:100%; max-height:5.8in; margin:auto; }
+.image figcaption,.image-band figcaption { font-size:8.5pt; color:var(--muted); margin-top:.08in; }
+.image-column { display:grid; grid-template-columns:1.2fr .8fr; gap:.25in; margin:.24in 0; }
+.image-column img { display:block; max-width:100%; max-height:4.8in; margin-bottom:.1in; }
+.key-values { display:grid; grid-template-columns:repeat(auto-fit,minmax(1.55in,1fr)); gap:.15in .25in; margin:.24in 0; }
+.key-values div { border-top:1px solid var(--line); padding-top:.1in; }
+.key-values dt { font:500 7pt/1.4 Inter,Arial,sans-serif; text-transform:uppercase; letter-spacing:.075em; color:var(--muted); }
+.key-values dd { margin:.055in 0 0; font:400 23pt/1.1 Crimson,Georgia,serif; font-variant-numeric:tabular-nums; }
+.definitions>div { display:grid; grid-template-columns:1.4in 1fr; gap:.14in; padding:.1in 0; border-bottom:1px solid var(--line); }
+.definitions dt { font-weight:550; }.definitions dd { margin:0; }
+.clause { display:grid; grid-template-columns:.42in 1fr; gap:0 .08in; margin:.17in 0; break-inside:avoid-page; }
+.clause h3 { grid-column:1/3; font:600 11pt Inter; margin:0 0 .07in; }
+.clause h3 span { display:inline-block; width:.42in; margin-right:.08in; }.clause>div { grid-column:2; }
+.signatures { break-before:page; margin-top:.3in; }
+.signatures>div { display:grid; grid-template-columns:repeat(auto-fit,minmax(2.55in,1fr)); gap:.4in; }
+.signatures section { display:flex; flex-direction:column; gap:.06in; min-height:1.35in; }
+.sign-line { height:.55in; border-bottom:1px solid var(--ink); }
+.signatures span,.signatures small { font-size:8.5pt; color:var(--muted); }
+.contents { margin:.35in 0 .35in var(--gutter); break-after:page; }
+.contents h2,.appendix>h2,.notes>h2 { font:450 25pt/1.1 Crimson,Georgia,serif; margin:.3in 0 .2in; break-after:avoid; }
+.contents ol { list-style:none; padding:0; margin:0; counter-reset:contents; }
+.contents li { border-top:1px solid var(--line); padding:.12in 0; break-inside:avoid; }
+.contents a { display:flex; gap:.18in; text-decoration:none; font:400 14pt Crimson; }
+.contents a::before { counter-increment:contents; content:counter(contents,decimal-leading-zero); color:var(--accent); font:8pt FragmentMono; margin-top:4px; }
+.appendix,.notes { margin-left:var(--gutter); }
+.sources { padding-left:.2in; }.sources li { padding:.085in 0; border-bottom:1px solid var(--line); }
+.notes ol { list-style:none; padding-left:0; }.notes li { margin:.08in 0; }
+.note-label { font-weight:600; }.note-ref { font-size:8pt; line-height:0; vertical-align:super; }
+.block-note { display:block; margin-top:.075in; color:var(--muted); font-size:8pt; }
+/* A memo is a compact decision: title and handling details share the masthead. */
+.family-memo .cover { display:grid; grid-template-columns:1.9fr 1fr; column-gap:.35in; }
+.family-memo .cover>.brandline,.family-memo .cover>.eyebrow { grid-column:1/-1; }
+.family-memo .brandline { margin-bottom:.3in; }
+.family-memo .cover h1 { font-size:34pt; grid-column:1; margin:0 0 .08in; }
+.family-memo .cover>p { grid-column:1; font-size:10.5pt; }
+.family-memo .cover .metadata { grid-column:2; grid-row:2/span 4; display:grid; gap:.08in; margin:0; padding-left:.2in; border-left:2px solid var(--amber); }
+.family-memo .cover:has(>.eyebrow) .metadata { grid-row:3/span 4; }
+.family-memo .cover-small-print { grid-column:1/-1; }
+.family-memo .section { display:grid; grid-template-columns:1.4in 1fr; gap:.23in; margin-top:.23in; }
+.family-memo .section>header { display:block; margin:0; }
+.family-memo .section>header>span { display:none; }
+.family-memo .section>header h2 { font:500 15pt/1.12 Crimson,Georgia,serif; }
+.family-memo .section-body { margin:0; }
+/* Governance: stable left rail, subdued graphic weight. */
+.family-board .cover h1 { font-size:37pt; }
+.family-board .section { display:grid; grid-template-columns:1.42in 1fr; gap:.25in; border-top:1px solid var(--line); padding-top:.17in; }
+.family-board .section>header { display:block; margin:0; }
+.family-board .section>header h2 { font-size:16pt; }
+.family-board .section-body { margin:0; }
+.family-board .key-values { grid-template-columns:repeat(2,1fr); }
+/* Evidence-led long reading. No section-cover treadmill. */
+.family-report .cover h1 { max-width:6.4in; font-size:43pt; }
+.family-report .cover>h1,.family-report .cover>.eyebrow,.family-report .cover>p,.family-report .cover>.metadata,.family-report .cover>.cover-small-print { margin-left:var(--gutter); }
+.family-report .section p { break-inside:avoid-page; }
+.family-report .notes { font-size:9pt; line-height:1.4; }
+.family-report .notes>h2 { font-size:19pt; margin:.2in 0 .12in; }
+.family-business-plan .cover h1 { font-size:48pt; max-width:6.1in; }
+.family-business-plan .plan-heading { display:grid; grid-template-columns:.43in 1fr; gap:.12in; padding-top:.1in; border-top:1px solid var(--line); }
+.family-business-plan .plan-heading>span { font:300 31pt/1 Crimson,Georgia,serif; color:var(--accent); }
+.family-business-plan .plan-heading h2 { font-size:26pt; }
+.family-business-plan .section-body { margin-left:var(--gutter); }
+.has-contents.family-report .cover,.has-contents.family-business-plan .cover { padding-bottom:.28in; }
+/* Commercial sheets foreground comparable information. */
+.family-pricing .cover h1 { font-size:37pt; max-width:6in; }
+.family-pricing .section>header { display:block; }
+.family-pricing .section>header h2 { font:550 11pt/1.2 Inter,Arial,sans-serif; }
+.family-pricing .section-body { margin:0; }
+.family-pricing table { font-size:10pt; }
+.family-pricing th { color:var(--accent); }
+.family-pricing tbody tr:last-child td { border-bottom:1px solid var(--ink); }
+.family-pricing .pricing-heading small { display:none; }
+/* Case narrative: strong opening and compact evidence hierarchy. */
+.family-case-study .cover { padding-bottom:.2in; margin-bottom:.18in; }
+.family-case-study .cover h1 { font-size:41pt; }
+.family-case-study .case-heading { display:block; }
+.family-case-study .case-heading h2 { font-size:19pt; }
+.family-case-study .section { margin-top:.16in; }
+.family-case-study .section-body { margin:0; }
+.family-case-study .section p { margin:.07in 0; }
+.family-case-study .table-wrap { margin:.14in 0; }
+.family-case-study th,.family-case-study td { padding-top:.08in; padding-bottom:.08in; }
+/* Procedures use a clear, repeated number and action column. */
+.family-sop .cover h1 { font:500 31pt/1.07 Inter,Arial,sans-serif; letter-spacing:-.045em; }
+.family-sop .sop-heading { display:grid; grid-template-columns:.38in 1fr; gap:.17in; align-items:start; }
+.family-sop .sop-heading>span { font:350 29pt/1 Crimson,Georgia,serif; }
+.family-sop .sop-heading h2 { font:550 13pt/1.2 Inter,Arial,sans-serif; letter-spacing:-.015em; }
+/* Formal documents keep familiar structure and the discreet original mark. */
+.family-letter .letter-heading { border:0; padding-top:0; }
+.family-letter .letter-heading h1 { font:450 26pt/1.1 Crimson,Georgia,serif; margin:.05in 0 .18in; }
+.family-letter .metadata { display:grid; grid-template-columns:1fr 1fr; border-bottom:1px solid var(--line); padding-bottom:.2in; }
+.family-letter .section>header>span { display:none; }
+.family-letter .section>header h2 { font:550 11pt/1.3 Inter,Arial,sans-serif; }
+.family-letter .section-body,.family-letter .appendix,.family-letter .notes { margin:0; }
+.family-legal { font:400 11.5pt/1.48 Crimson,Georgia,serif; }
+.family-legal .brandline { margin-bottom:.26in; }
+.family-legal .brandline svg { width:1.1in; height:.275in; }
+.family-legal .brand-symbol { fill:var(--ink); }
+.family-legal .legal-heading h1 { font:550 23pt/1.15 Crimson,Georgia,serif; margin:.1in 0; }
+.family-legal .legal-heading>p { margin:.06in 0; }
+.family-legal .section>header>span { display:none; }
+.family-legal .section>header h2 { font:600 12pt/1.3 Inter,Arial,sans-serif; }
+.family-legal .section-body,.family-legal .appendix,.family-legal .notes { margin:0; }
+.family-legal .lead { font:450 14pt/1.4 Crimson,Georgia,serif; }
+/* Keep a short evidence case on one page without reducing body type. */
+.family-case-study .brandline { margin-bottom:.24in; }
+.family-case-study .cover h1 { font-size:35pt; }
+.family-case-study .cover { padding-bottom:.14in; margin-bottom:.1in; }
+.family-case-study .metadata { margin-top:.17in; }
+.family-case-study .section { margin-top:.13in; }
+.family-case-study .section>header { margin-bottom:.07in; }
+.family-case-study .section>header small { margin-bottom:.025in; }
+.family-case-study .section>header h2 { font-size:18pt; }
+.family-case-study .section p { line-height:1.45; }
+.family-case-study th,.family-case-study td { padding-top:.055in; padding-bottom:.055in; }
+
+@media screen {
+ body { max-width:8.5in; margin:0 auto; padding:40px 54px; }
+ .manual-break { margin-top:.4in; }
+}
+@media screen and (max-width:600px) {
+ body { padding:26px 22px; font-size:16px; --gutter:0; }
+ .brandline { margin-bottom:30px; }.brandline svg { width:118px; height:30px; }.document-kind { font-size:10px; }
+ .cover h1,.family-memo .cover h1,.family-board .cover h1,.family-report .cover h1,.family-business-plan .cover h1,.family-case-study .cover h1,.family-pricing .cover h1 { font-size:43px; }
+ .cover>p { font-size:16px; }.cover .cover-summary { font-size:23px; }
+ .family-memo .cover,.family-memo .section,.family-board .section { display:block; }
+ .family-memo .cover .metadata { margin-top:20px; padding-left:14px; display:flex; }
+ .family-memo .section>header,.family-board .section>header { margin-bottom:12px; }
+ .section>header h2 { font-size:28px; }.section>header small { font-size:10px; }
+ .section>header>span { flex-basis:28px; font-size:28px; }
+ .metadata { gap:12px 22px; font-size:12px; }.metadata dt { font-size:10px; }
+ .cards,.image-column { grid-template-columns:1fr; }
+ .table-wrap { overflow-x:auto; }table { min-width:480px; font-size:13px; }th { font-size:11px; }
+ .family-business-plan .section-body { margin-left:0; }
+ .definitions>div { grid-template-columns:1fr; gap:5px; }
+ .contents { margin:24px 0; }.key-values { grid-template-columns:1fr 1fr; }.lead { font-size:24px; }
+}

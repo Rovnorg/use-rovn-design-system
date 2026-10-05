@@ -1,3 +1,7 @@
+> ARCHIVAL REPRODUCTION ONLY. Retired for new Rōvn deliverables on 3 October
+> 2026. Amber-heavy and paper/cream instructions below describe a historical
+> capture, not current design guidance. Use docs/design-direction.md instead.
+
 ---
 name: use-rovn-design-system
 description: Turn Markdown or DOCX into a Rōvn-branded report PDF using the versioned Paper-derived components, imagery, typography, and pagination engine in this repository. Use for Rōvn documents and explicit design-template syncs; slide output is not implemented yet.

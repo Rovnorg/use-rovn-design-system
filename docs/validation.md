@@ -1,30 +1,66 @@
 # Validation record
 
-## Professional upgrade — bounded validation, 11 September 2026
+## Editorial document upgrade — 3 October 2026
 
-This fork extends baseline `f00d0183e6353d5953c2a4a7dca700c68da1a5b1`. The evidence below records local testing of that extension before public packaging, not an upstream release, hosted CI result or universal A+ verdict. The review found and corrected content omissions, unsupported-field acceptance, unsafe local-image traversal, Word field/hierarchy defects, and presentation overflow. Do not infer universal acceptance from a generated file or a green unit test alone.
+This revision restores the original Rōvn mark and editorial typography on pure-white
+reading surfaces. It adds real normal/italic variable-font registration, distinct
+family compositions, deliberate amber, optional authored emphasis panels, and
+renderer provenance covering code, styles, logo and embedded fonts. The skill
+selects a composition for the reader and occasion before rendering. Ordinary
+prepared JSON no longer selects the historical report layout implicitly.
 
-On Windows, Node 24.14.0 and Chromium 153.0.8010.12: the complete repository suite passed 30/30; after final family-spacing changes, the affected professional/integration suite passed 11/11. Ten narrative examples generated PDF, HTML, normalized JSON and native DOCX; the explicit presentation and workbook examples generated PPTX and XLSX. There were no generation failures in the final gallery run.
+### Verified scope
 
-The final narrative gallery has 22 actual PDF pages: memo 1, letter 1, pricing 1, case study 1, plan 6, report 3, proposal 2, board 2, SOP 2, legal reference 3. All pages were visually reviewed. An independent extraction check found no missing supplied phrases or text outside page bounds. This check is phrase-presence/bounds evidence, not exact equality, reading-order proof or a guarantee against every clipping case.
+- Full repository suite: 36/36 passed; after final native metadata/font-preflight
+  polish, affected Office suite: 8/8 passed.
+- Eleven narrative fixtures produced 22 PDF pages: memo 1, letter 1, pricing 1,
+  case-study 1, business-plan 5, report 3, proposal 2, board 2, SOP 2, legal 3,
+  plus the one-page brand specimen. Every page was inspected.
+- Independent extraction found all 403 checked source fields and no text outside
+  page bounds. This checks phrase presence, not exhaustive semantic equality.
+  Intentional CSS uppercase on the specimen eyebrow was accounted for.
+- All 33 HTML width checks passed at 390, 768 and 1280 pixels. Wide tables scroll
+  inside their containers on mobile; the document canvas remains white.
+- Regression checks cover reader-action routing, legacy-input routing, original
+  logo presence, variable/italic font registration and emphasis-panel contrast.
+- A read-only reviewer found no material blocker in the inspected final PDF/HTML
+  fixtures. This is bounded evidence, not a universal aesthetic or format grade.
 
-A separate same-source behavioral test opened the memo in Microsoft Word 16.0 read-only and updated all fields: one Letter page, no unwanted contents list, working PAGE field displaying 1, sender and all supplied body content preserved. Its actual PDF and Word-rendered PDF were visually reviewed. Word substituted Cambria/Cambria-Bold for missing fonts; exact native brand typography is not established. This test did not perform an edit/save round trip.
+### Reproduce the candidates
 
-The final six-slide PPTX and three-sheet XLSX were rendered in LibreOffice 26.2.3.2 and every preview page was reviewed. Those are LibreOffice checks, not Microsoft PowerPoint/Excel visual-equivalence proof. A separate Microsoft Excel synthetic in-memory formula check recalculated A2=7 with B2=A2*2 to 14 and closed without saving. ExcelJS itself only writes supplied cached values.
+```sh
+npm ci
+npm run setup
+npm test
+node scripts/build-professional-gallery.mjs output/gallery
+node scripts/render.mjs examples/professional/brand-editorial.json --out output/brand-editorial.pdf --screenshots
+```
 
-Reproduce candidates with `node scripts/build-professional-gallery.mjs OUTPUT_DIRECTORY`; retain source, package and preview hashes. Private machine-specific installation records and native-application preview artifacts are not included in this public package. Consequently, the historical manual checks are reported observations, not independently reproducible evidence contained in the repository. Rerun target-application checks for each delivery environment.
+PDF inspection also requires Poppler. Keep generated source, PDFs, page PNGs, QA
+records and artifact hashes together. Task-specific local evidence and private
+working documents are intentionally not part of this repository. The bundled
+fixtures are synthetic, except the attributed and pinned Common Paper reference.
 
-The research taxonomy and file-format inventory are intentionally broader than implemented adapters. They do not claim ODT/RTF/EPUB, signed or fillable PDF, compliance profiles, macros, structured regulatory submissions, or responsive application layouts are implemented. Office fonts are declared but not embedded; installed-font and native-editor checks remain separate.
+### Editable-format limits
 
-Professional PDF notes are linked endnotes, not page footnotes. DOCX rejects unsupported image/callout/card and table-layout features. Presentation geometry checks reject content beyond fixed boxes instead of shrinking or dropping text. Four transitive dependency audit findings remain (two high, two moderate); see [Office formats](office-formats.md) for advisories and supported-path reachability constraints. No clean-security-audit, assistive-technology, PDF/A, PDF/UA, PDF/X or signing-readiness claim is made.
+The final memo was rendered in Microsoft Word 16.0.20430.20092. Its logo and layout
+were inspected; Word substituted Calibri/Cambria for missing desktop fonts. The
+six-slide presentation and three-page workbook were rendered and inspected in
+LibreOffice 26.2.3.2; the presentation display face was substituted with DejaVuSans.
+These checks do not establish exact native brand-font fidelity or Microsoft
+PowerPoint/Excel visual equivalence. Matching desktop fonts are required. PDF/HTML
+embeds the intended faces and is the visual reference.
 
-## Public-package reproduction — 11 September 2026
+Office packages contain native editable text, tables and values, but do not embed
+the declared fonts. ExcelJS writes supplied cached formula results; it does not
+calculate formulas. Professional PDF renders linked endnotes, not page-associated
+footnotes. Accessibility, PDF/A, PDF/UA, PDF/X and execution-readiness certifications
+are not claimed. Unsupported components fail explicitly; see [Office formats](office-formats.md).
 
-A separate publication worktree installed dependencies with `npm ci`, ran `npm run setup` using the same host's browser cache, and passed all 30 tests. The README commands produced a one-page memo PDF and actual-page PNG, plus native DOCX, PPTX and XLSX packages. The memo page was visually reviewed. This is a separate-worktree reproduction using existing system tools, not a clean-machine or cross-platform certification. The publication pass did not repeat the historical native Office checks above.
-
-Relative documentation links and the skill frontmatter were checked. A targeted scan of candidate source files found no matching private-machine paths or supported credential patterns; this is not an exhaustive secret or security audit. The public package omits machine-specific installation records and private company records. It retains upstream and third-party notices without adding a blanket license.
-
-The dated evidence below describes the original `report-v1` only. It must not be reused as proof for the new professional or Office adapters.
+This supersedes the rejected warm-paper and sterile tiny-accent design directions.
+The original source captures remain unchanged. Publication on a Rōvn branch does
+not imply acceptance into Jerry's upstream or deployment to existing live surfaces.
+The historical validation below concerns only the explicit `report-v1` route.
 
 ## Historical report-v1 evidence
 
@@ -60,7 +96,7 @@ npm run build:templates
 npm test
 node scripts/verify-reference.mjs
 python3 scripts/compare-reference.py --check
-npm run render -- examples/sample.md --layout report-v1 --screenshots
+npm run render -- examples/sample.md --screenshots
 ```
 
 The Python comparison requires Pillow and NumPy. It is separate from `npm test` so normal generation does not require Python. PDF visual inspection can use `pdftoppm`; PDF structure can be inspected with `pypdf`.
@@ -70,7 +106,7 @@ The Python comparison requires Pillow and NumPy. It is separate from `npm test` 
 - The invoking agent performs permitted light editing and component selection. The renderer does not call a model or rewrite facts. Its preservation check covers pagination, not editorial changes made before rendering.
 - Oversized fixed cover copy, unsupported Word objects/equations, very long footnotes, or unsplittable components produce actionable errors. Editorial restructuring must preserve the original content.
 - Arbitrary new fonts, non-Latin scripts, emoji, and new component designs have not been validated. The original list-circle and footer-dot symbols are bundled Paper exports to avoid operating-system fallback for those specific glyphs.
-- At the time of this historical report-v1 validation, no slide-deck renderer was implemented. The professional extension now has the separate, bounded [PPTX adapter](office-formats.md); historical report checks do not validate it.
+- No slideshow or slide-deck renderer is implemented. The content model and assets are separated from the report template for a future format adapter.
 
 ## Research-report regression
 

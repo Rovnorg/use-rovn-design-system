@@ -8,7 +8,7 @@ import ExcelJS from 'exceljs';
 import { renderOffice, validateOfficeDocument, validatePresentation, validateWorkbook } from '../src/office.mjs';
 
 const narrative = {
-  schemaVersion: 2, kind: 'document', metadata: { title: 'Synthetic executive memo', author: 'Test Author', sender: 'Test Sender', subject: 'Native Office proof', confidentiality: 'Internal handling' }, intent: { family: 'memo', confidentiality: 'Editorial purpose only' },
+  schemaVersion: 2, kind: 'document', metadata: { title: 'Synthetic executive memo', author: 'Test Author', sender: 'Test Sender', subject: 'Native Office proof', confidentiality: 'Internal handling' }, intent: { family: 'memo', confidentiality: 'Editorial purpose only', readerAction: 'Approve the synthetic memo', designRationale: 'Use compact decision-first hierarchy' },
   sections: [{ id: 'findings', title: 'Findings', blocks: [
     { type: 'paragraph', html: 'A <strong>retained fact</strong> has <code>code</code>, <sup>up</sup>, <sub>down</sub>, <s>strike</s>, a <a href="https://example.com/evidence">source link</a>, a <a href="#second">local cross-reference</a>, and a note<span data-note="1">1</span>.' },
     { type: 'paragraph', text: '**MUST BOLD** and `inline code` with a literal <img src="x" alt="literal image">.' },
@@ -23,29 +23,40 @@ const deck = { schemaVersion: 2, kind: 'presentation', metadata: { title: 'Synth
   { layout: 'title', title: 'Synthetic deck', subtitle: 'Editable objects' },
   { layout: 'two-column', title: 'Decision', left: { heading: 'Keep', items: ['Source content'] }, right: { heading: 'Check', items: ['Overflow limits'] }, notes: 'Speaker note.' },
   { layout: 'data-table', title: 'Table', table: { headers: ['Metric', 'Value'], rows: [['Sites', '3']] } },
-  { layout: 'closing', title: 'Thank you', contact: 'contact@example.org' },
+  { layout: 'closing', title: 'Thank you', contact: 'founder@rovn.to' },
 ] };
 const workbook = { schemaVersion: 2, kind: 'workbook', metadata: { title: 'Synthetic workbook' }, sheets: [{ name: 'Model', columns: [
   { key: 'price', header: 'Price', type: 'currency' }, { key: 'units', header: 'Units', type: 'number' }, { key: 'total', header: 'Total', type: 'formula' },
 ], rows: [{ price: 25, units: 2, total: { formula: 'A2*B2', result: 50 } }] }] };
 
 async function zipText(file) { const zip = await JSZip.loadAsync(await fs.readFile(file)); const parts = await Promise.all(Object.values(zip.files).filter(file => /\.(xml|rels)$/.test(file.name)).map(file => file.async('string'))); return parts.join('\n'); }
+async function zipMedia(file) { const zip = await JSZip.loadAsync(await fs.readFile(file)); return Object.keys(zip.files).filter(name => /\/media\/.*\.svg$/i.test(name)); }
 test('DOCX is a native package preserving narrative text, link and footnote structures', async () => {
   const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'rovn-office-'));
   try { const out = path.join(dir, 'memo.docx'); const result = await renderOffice(narrative, { out, format: 'docx' }); const text = await zipText(out);
-    assert.ok((await fs.stat(out)).size > 1000); assert.match(text, /retained fact/); assert.match(text, /MUST BOLD/); assert.doesNotMatch(text, /\*\*MUST BOLD\*\*/); assert.match(text, /inline code/); assert.match(text, /Fragment Mono/); assert.match(text, /literal image/); assert.match(text, /https:\/\/example.com\/evidence/); assert.match(text, /Synthetic source note/); assert.match(text, /Test Signer/); assert.equal((text.match(/Acknowledged by:/g) || []).length, 1); assert.match(text, /w:anchor="second"/); assert.match(text, /Exact ordered marker/); assert.match(text, /Retained table caption/); assert.match(text, /Retained table note/); assert.match(text, /Retained source description/); assert.match(text, /w:vertAlign/); assert.match(text, /<dc:creator>Test Author<\/dc:creator>/); assert.match(text, /Author: /); assert.match(text, /Test Sender/); assert.match(text, /Internal handling/); assert.match(text, /Editorial purpose only/); assert.match(text, /Deep retained heading/); assert.match(text, /w:pStyle w:val="Heading5"/); assert.match(text, /Language: javascript/); assert.match(text, /<w:pgSz[^>]*w:w="12240"[^>]*w:h="15840"/); assert.match(text, /<w:instrText[^>]*>PAGE<\/w:instrText>/); assert.equal(result.artifact, out);
+    assert.ok((await fs.stat(out)).size > 1000); assert.match(text, /retained fact/); assert.match(text, /MUST BOLD/); assert.doesNotMatch(text, /\*\*MUST BOLD\*\*/); assert.match(text, /inline code/); assert.match(text, /Fragment Mono/); assert.match(text, /literal image/); assert.match(text, /https:\/\/example.com\/evidence/); assert.match(text, /Synthetic source note/); assert.match(text, /Test Signer/); assert.equal((text.match(/Acknowledged by:/g) || []).length, 1); assert.match(text, /w:anchor="second"/); assert.match(text, /Exact ordered marker/); assert.match(text, /Retained table caption/); assert.match(text, /Retained table note/); assert.match(text, /Retained source description/); assert.match(text, /w:vertAlign/); assert.match(text, /<dc:creator>Test Author<\/dc:creator>/); assert.match(text, /Author: /); assert.match(text, /Test Sender/); assert.match(text, /Internal handling/); assert.match(text, /Editorial purpose only/); assert.doesNotMatch(text, /Approve the synthetic memo|Use compact decision-first hierarchy/); assert.match(text, /Deep retained heading/); assert.match(text, /w:pStyle w:val="Heading5"/); assert.match(text, /Language: javascript/); assert.match(text, /<w:pgSz[^>]*w:w="12240"[^>]*w:h="15840"/); assert.match(text, /<w:instrText[^>]*>PAGE<\/w:instrText>/); assert.match(text, /15181E/); assert.match(text, /Crimson Pro/); assert.match(text, /Inter/); assert.ok((await zipMedia(out)).length > 0); assert.doesNotMatch(text, /C68A35|1C1A18|F5F1EA|D9D1C6|Times New Roman/); assert.equal(result.artifact, out);
+  } finally { await fs.rm(dir, { recursive: true, force: true }); }
+});
+test('DOCX applies the editorial long-form profile only to report and legal families', async () => {
+  const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'rovn-office-'));
+  try {
+    const out = path.join(dir, 'report.docx');
+    await renderOffice({ ...narrative, intent: { ...narrative.intent, family: 'report' } }, { out, format: 'docx' });
+    const text = await zipText(out);
+    assert.match(text, /Crimson Pro/);
+    assert.doesNotMatch(text, /Times New Roman|C68A35|F5F1EA/);
   } finally { await fs.rm(dir, { recursive: true, force: true }); }
 });
 test('PPTX is an editable 16:9 package with notes, tables and no arbitrary prose conversion', async () => {
   const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'rovn-office-'));
   try { const out = path.join(dir, 'deck.pptx'); await renderOffice(deck, { out, format: 'pptx' }); const text = await zipText(out);
-    assert.ok((await fs.stat(out)).size > 1000); assert.match(text, /Synthetic deck/); assert.match(text, /Source content/); assert.match(text, /Speaker note/); assert.match(text, /<a:tbl/); assert.match(text, /srgbClr val="1C1A18"/);
+    assert.ok((await fs.stat(out)).size > 1000); assert.match(text, /Synthetic deck/); assert.match(text, /Source content/); assert.match(text, /Speaker note/); assert.match(text, /<a:tbl/); assert.match(text, /srgbClr val="15181E"/); assert.match(text, /srgbClr val="B66A09"/); assert.match(text, /Crimson Pro/); assert.ok((await zipMedia(out)).length > 0); assert.doesNotMatch(text, /C68A35|1C1A18|F5F1EA|D9D1C6|E9E1D8/);
   } finally { await fs.rm(dir, { recursive: true, force: true }); }
 });
 test('XLSX retains typed values and formula cached result without claiming calculation', async () => {
   const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'rovn-office-'));
   try { const out = path.join(dir, 'model.xlsx'); const result = await renderOffice(workbook, { out, format: 'xlsx' }); const loaded = new ExcelJS.Workbook(); await loaded.xlsx.readFile(out); const sheet = loaded.getWorksheet('Model');
-    assert.equal(sheet.getCell('A2').value, 25); assert.equal(sheet.getCell('A1').font.bold, true); assert.equal(sheet.getCell('A1').font.color.argb, 'FFFFFFFF'); assert.deepEqual(sheet.getCell('C2').value, { formula: 'A2*B2', result: 50 }); assert.match(result.limitations[0], /does not calculate formulas/);
+    assert.equal(sheet.getCell('A2').value, 25); assert.equal(sheet.getCell('A1').font.bold, true); assert.equal(sheet.getCell('A1').font.name, 'Inter'); assert.equal(sheet.getCell('A1').font.color.argb, 'FF15181E'); assert.equal(sheet.getCell('A1').border.bottom.color.argb, 'FFD9DDE3'); assert.deepEqual(sheet.getCell('C2').value, { formula: 'A2*B2', result: 50 }); assert.match(result.limitations[0], /does not calculate formulas/);
   } finally { await fs.rm(dir, { recursive: true, force: true }); }
 });
 test('models reject silent data loss and layouts that exceed tested boxes', () => {

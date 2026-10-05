@@ -44,7 +44,7 @@
       "types": ["investor memo", "investment committee memo", "investor update", "diligence pack", "diligence questionnaire", "data-room index", "fundraising FAQ", "financial appendix"],
       "job": "Let a reader evaluate the business and trace statements to evidence.",
       "structure": ["investment or company overview", "evidence and dated metrics", "economics", "risks and open questions", "requested decision when supplied", "source and file index"],
-      "layout": "Light, calm reading surface, restrained amber accents, evidence tables and linked appendices; no paper grain.",
+      "layout": "Pure white reading surface, original Rōvn mark, expressive editorial typography, deliberate amber, evidence tables and linked appendices; no off-white or paper grain.",
       "formats": ["DOCX", "PDF", "HTML", "XLSX companion", "PPTX when presentation is requested"],
       "checks": ["forecast and actuals distinguished", "recipient-specific confidentiality", "no internal generation labels", "source dates retained"],
       "resources": ["sequoia", "frc-board", "gov-spreadsheets"]

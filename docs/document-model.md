@@ -1,6 +1,6 @@
 # Narrative document model
 
-The professional route uses `schemaVersion: 2`, `kind: "document"`. It separates content from document-family layout. The [original v1 model](document-model-v1.md) and `--layout report-v1` remain available for the original Paper report.
+The professional route uses `schemaVersion: 2`, `kind: "document"`. It separates content from document-family layout. Follow [the current design direction](design-direction.md): white surfaces, near-black information, amber only as an accent. All ordinary input formats, including old prepared JSON, now select this route. The [original v1 model](document-model-v1.md) and explicit `--layout report-v1` are retained only for archival reproduction. Legacy features the professional model cannot preserve must be adapted explicitly, not silently dropped.
 
 ## Select a family
 
@@ -17,7 +17,7 @@ The professional route uses `schemaVersion: 2`, `kind: "document"`. It separates
 | `case-study` | Evaluate an intervention | Context, action, evidence, outcome and limitations |
 | `pricing` | Compare commercial scope | Units, included/excluded work and comparable prices |
 
-These are layout families, not drafting authority or exhaustive templates. The [taxonomy](research/document-taxonomy.json) covers additional types and specialist routes. Automatic classification is a fallback; review its reasons and override it where necessary.
+These are layout families, not drafting authority or exhaustive templates. The [taxonomy](research/document-taxonomy.json) covers additional types and specialist routes. Automatic classification is a fallback; review its reasons and override it where necessary. The classifier considers explicit family, authored clauses, document title, purpose, reader action and audience; incidental body terms cannot select a family. The invoking agent researches references and records its design rationale. A classifier cannot perform art direction.
 
 ## Input and commands
 
@@ -52,7 +52,7 @@ Professional PDF generation needs `pdfinfo` on PATH; actual-page PNGs additional
 }
 ```
 
-Metadata supports title, subtitle, author, date, version, recipient, sender, subject, confidentiality, eyebrow, summary and smallPrint. Never invent a legal effective date, approval, author or version. Intent may include audience, purpose, readingMode, editable and confidentiality. Router reasons are diagnostic metadata, not content or evidence. Unknown document, metadata, intent and section fields are rejected.
+Metadata supports title, subtitle, author, date, version, recipient, sender, subject, confidentiality, eyebrow, summary and smallPrint. Never invent a legal effective date, approval, author or version. Intent may include audience, purpose, readerAction, readingMode, designRationale, editable and confidentiality. Keep the reference comparison in the accompanying design brief. Router reasons are diagnostic metadata, not content or evidence. Unknown document, metadata, intent and section fields are rejected.
 
 Sections contain a string title (empty for untitled prose), stable optional ID, blocks, and optional boolean `pageBreakBefore`. Supplied IDs must be unique. `html` is sanitized inline markup and takes precedence over `text`; edit the active field. Ordinary `text` is inline Markdown; code text is literal. Legal labels are supplied strings. Local links use `#id` and must resolve. Migration from v1 removes report-generated section letters, subsection counters and Paper table-style variants; the selected professional family supplies its own styling. Supplied heading text, list markers, legal labels and cell contents remain. Use `report-v1` when its precise presentation contract is required.
 
@@ -74,7 +74,7 @@ An adapter must reject a component or option it cannot preserve. A field in this
 
 Signature blocks supply blank presentation lines, not identity, authority, consent, signing status or electronic-signature validity.
 
-Note definitions are inline HTML keyed by ID; references use `<span data-note="1">1</span>`. Professional PDF currently uses linked **endnotes**, not page-associated footnotes. Use the original report route or a supported Word path when page footnotes are required, or obtain agreement to the endnote treatment. Keep every reference and definition; do not describe endnotes as page footnotes.
+Note definitions are inline HTML keyed by ID; references use `<span data-note="1">1</span>`. Professional PDF currently uses linked **endnotes**, not page-associated footnotes. Use a supported Word or specialist path when page footnotes are required, or obtain agreement to the endnote treatment. Keep every reference and definition; do not describe endnotes as page footnotes.
 
 Sources contain `title` and optional `item`, `url`, `label`, `description`. Keep supplied bibliographic details and qualifiers. Appendices are supplied blocks, not automatically generated research.
 

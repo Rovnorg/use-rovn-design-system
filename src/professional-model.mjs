@@ -3,7 +3,7 @@ import { cleanInline, inline, validateDocument } from './input.mjs';
 export const professionalFamilies = new Set(['memo', 'business-plan', 'report', 'board', 'proposal', 'legal', 'letter', 'sop', 'case-study', 'pricing']);
 const blockTypes = new Set(['paragraph', 'lead', 'heading', 'list-item', 'table', 'code', 'callout', 'cards', 'image', 'image-column', 'image-band', 'rule', 'key-values', 'signature', 'clause', 'definition-list', 'page-break']);
 const metadataKeys = ['title','author','date','version','subtitle','recipient','sender','subject','confidentiality','eyebrow','summary','smallPrint'];
-const intentKeys = ['family','audience','purpose','readingMode','confidentiality','editable'];
+const intentKeys = ['family','audience','purpose','readerAction','readingMode','designRationale','confidentiality','editable'];
 function onlyKeys(value, allowed, label) {
   if (!value || typeof value !== 'object' || Array.isArray(value)) throw new Error(`${label} must be an object.`);
   for (const key of Object.keys(value)) if (!allowed.includes(key)) throw new Error(`${label}.${key} is not supported and would be ignored.`);
@@ -19,7 +19,7 @@ function normalizeIntent(raw = {}, metadata = {}) {
   const supplied = raw.family || metadata.family || metadata.documentFamily || metadata.type;
   if (supplied != null && !professionalFamilies.has(supplied)) throw new Error(`Unsupported document family: ${supplied}.`);
   const intent = {};
-  for (const key of ['audience', 'purpose', 'readingMode', 'confidentiality']) if ((raw[key] ?? metadata[key]) != null) intent[key] = string(raw[key] ?? metadata[key], `intent.${key}`);
+  for (const key of ['audience', 'purpose', 'readerAction', 'readingMode', 'designRationale', 'confidentiality']) if ((raw[key] ?? metadata[key]) != null) intent[key] = string(raw[key] ?? metadata[key], `intent.${key}`);
   const editable = raw.editable ?? metadata.editable;
   if (editable !== undefined) {
     if (typeof editable !== 'boolean') throw new Error('intent.editable must be true or false.');
@@ -33,8 +33,11 @@ export function inferDocumentIntent({ metadata = {}, sections = [], intent = {} 
   const provided = normalizeIntent(intent, metadata);
   if (provided.family) return { intent: provided, reasons: ['family supplied by the author'] };
   const title = [metadata.title, metadata.subject, metadata.subtitle].filter(Boolean).join(' ').toLowerCase();
-  const body = sections.flatMap(s => [s.title, ...(s.blocks || []).map(b => b.title || b.text || '')]).join(' ').toLowerCase();
-  if (sections.some(section => section.blocks?.some(block => ['clause', 'signature', 'definition-list'].includes(block.type)))) return { intent: { ...provided, family: 'legal' }, reasons: ['inferred legal from legal-only structured blocks'] };
+  const purpose = [provided.purpose, provided.readerAction].filter(Boolean).join(' ').toLowerCase();
+  const audience = (provided.audience || '').toLowerCase();
+  // A signature or glossary can belong to a proposal or a report. Authored
+  // clauses are stronger evidence of a formal legal instrument.
+  if (sections.some(section => section.blocks?.some(block => block.type === 'clause'))) return { intent: { ...provided, family: 'legal' }, reasons: ['inferred legal from authored legal clauses'] };
   const rules = [
     ['legal', /\b(agreement|addendum|amendment|contract)\b/, 'legal document title'],
     ['pricing', /\b(pricing|price list|rate card|fees|commercial terms)\b/, 'commercial pricing language'],
@@ -47,9 +50,14 @@ export function inferDocumentIntent({ metadata = {}, sections = [], intent = {} 
     ['memo', /\b(memo|decision|recommendation|briefing|executive summary)\b/, 'memo or decision language']
   ];
   const explicitTitleFamily = /\bbusiness plan\b/.test(title) ? ['business-plan', null, 'business-plan title'] : /\b(case study|customer story)\b/.test(title) ? ['case-study', null, 'case-study title'] : /\b(research|technical) report\b/.test(title) ? ['report', null, 'report title'] : undefined;
-  const match = explicitTitleFamily || rules.find(([, pattern]) => pattern.test(title)) || rules.find(([family, pattern]) => family !== 'legal' && pattern.test(body)) || (/(^|\b)(agreement|addendum|amendment|contract)(\b|$)/.test(body) ? ['legal', null, 'legal document terminology in body'] : undefined);
+  const purposeMatch = rules.find(([, pattern]) => pattern.test(purpose));
+  const actionMatch = /\b(compare|evaluate)\b.*\b(prices|packages|fees)\b/.test(purpose) ? ['pricing', null, 'reader action: compare commercial scope'] : /\b(approve|decide|decision)\b/.test(purpose) ? [/\b(board|committee|directors)\b/.test(audience) ? 'board' : 'memo', null, 'reader action: make a decision'] : /\b(perform|execute|follow)\b.*\b(process|steps|procedure)\b/.test(purpose) ? ['sop', null, 'reader action: perform a process'] : undefined;
+  const audienceMatch = /\b(board|directors|investment committee)\b/.test(audience) ? ['board', null, 'supplied governance audience'] : undefined;
+  // Body mentions are evidence content, not a brief. A research paragraph
+  // about pricing or contracts must never silently choose commercial/legal design.
+  const match = explicitTitleFamily || rules.find(([, pattern]) => pattern.test(title)) || actionMatch || (purposeMatch && [purposeMatch[0], null, 'supplied purpose or reader action']) || audienceMatch;
   const family = match?.[0] || 'report';
-  return { intent: { ...provided, family }, reasons: [match ? `inferred ${family} from ${match[2]}` : 'defaulted to report for general long-form material'] };
+  return { intent: { ...provided, family }, reasons: [match ? `inferred ${family} from ${match[2]}` : 'fallback report: choose and document the reader task before final delivery; no design research was performed by this classifier'] };
 }
 
 function normalizeBlock(block, ids, counter) {
@@ -172,7 +180,7 @@ export function toProfessionalDocument(legacy, { intent = legacy.metadata?.inten
   const sections = source.sections.map(({ letter, generatedTitle, ...section }) => ({ ...section, title: generatedTitle ? '' : section.title, blocks: section.blocks.map(migrateBlock) }));
   const routingIntent = normalizeIntent(intent, source.metadata);
   const metadata = { ...source.metadata };
-  for (const key of ['family','documentFamily','type','audience','purpose','readingMode','editable','intent','sources']) delete metadata[key];
+  for (const key of ['family','documentFamily','type','audience','purpose','readerAction','readingMode','designRationale','editable','intent','sources']) delete metadata[key];
   return validateProfessionalDocument({
     schemaVersion: 2, kind: 'document', metadata, intent: routingIntent,
     sections, footnotes: source.footnotes, sources: source.sources, appendix: source.appendix.map(migrateBlock)
