@@ -1,94 +1,87 @@
 # Rōvn document system
 
-A shared agent skill and local renderer for purpose-specific documents. Create PDF and source-editable HTML, export supported narrative content to Word, and use explicit presentation and workbook models for PowerPoint and Excel.
+Create professional documents around the reader and occasion. The current design
+uses the original Rōvn mark, expressive Crimson Pro typography, pure-white
+reading surfaces and deliberate amber.
+Read [the design direction](docs/design-direction.md) before creating a file.
 
-This is a fork of [jkou-cmd/use-rovn-design-system](https://github.com/jkou-cmd/use-rovn-design-system), extending its original Paper-derived report renderer. It is public on GitHub, but **does not carry a blanket open-source license**. Read [attribution and usage restrictions](NOTICE.md), especially for brand imagery.
+## Choose the document
 
-## Supported scope
+Use [the narrative model](docs/document-model.md) for memos, letters, plans,
+reports, board papers, proposals, legal text, SOPs, case studies and pricing.
+Use [Office formats](docs/office-formats.md) for native Word, PowerPoint and Excel.
+The [taxonomy](docs/research/document-taxonomy.json) and
+[resource catalog](docs/research/research-and-resource-catalog.md) help choose
+references and specialist routes; they do not claim every format is implemented.
 
-| Route | Scope |
-| --- | --- |
-| Professional narrative → PDF / HTML | Memo, letter, business plan, report, board paper, proposal, legal text, SOP, case study and pricing |
-| Narrative v2 → DOCX | Native paragraphs, headings, tables, links, notes and page fields; unsupported structures are rejected |
-| Presentation v2 → PPTX | Five fixed 16:9 layouts with native text, tables, shapes and speaker notes |
-| Workbook v2 → XLSX | Typed cells, sheets, number formats, formulas and explicitly supplied cached results |
-| Original `report-v1` → PDF / HTML | Original Paper report, including its cover, section numbering, imagery and dark-page controls |
-
-The [research taxonomy](docs/research/document-taxonomy.json) maps 200 document types across 21 families. It is a routing resource, not a claim that every type or extension is implemented. See the [resource catalog](docs/research/research-and-resource-catalog.md) and [file-format map](docs/research/file-format-landscape.md) for specialist routes.
+A substantial new document needs a short design brief: reader, occasion, action,
+page budget, reference comparison and chosen composition. The invoking agent
+performs research and art direction. The deterministic renderer preserves content
+and applies the selected supported layout; it does not judge which design is best.
 
 ## Setup
 
-Prerequisites:
-
-- Node.js 22 or newer and npm.
-- Poppler's `pdfinfo` on `PATH` for professional PDF generation; `pdftoppm` for actual-page PNG previews and the complete test suite.
-- A supported local environment for Playwright Chromium. Browser system libraries may need installation on Linux.
+Requires Node.js 22 or newer, locked dependencies, Playwright Chromium and
+Poppler `pdfinfo` on PATH. Actual PDF page PNGs additionally require `pdftoppm`.
+Native Office visual checks require the relevant desktop application and fonts.
 
 ```sh
-git clone https://github.com/Rovnorg/use-rovn-design-system.git
-cd use-rovn-design-system
 npm ci
 npm run setup
+```
+
+Run the installed skill by its full path or invoke `$use-rovn-design-system` in
+Codex, `/use-rovn-design-system` in Claude Code. Keep the full repository and
+assets available. The canonical skill is in `.agents/skills/`; the Claude wrapper
+is in `.claude/skills/`. No paid model API or Paper connection is needed to render.
+
+## Render and inspect
+
+```sh
+node scripts/render.mjs examples/professional/executive-memo.md --prepare output/memo.json
+node scripts/render.mjs output/memo.json --out output/memo.pdf --screenshots
+node scripts/render.mjs source.md --family proposal --out output/proposal.pdf --screenshots
+node scripts/export-office.mjs output/memo.json --out output/memo.docx
+node scripts/render.mjs examples/professional/brand-editorial.json --out output/brand-editorial.pdf --screenshots
+node scripts/build-professional-gallery.mjs output/gallery
 npm test
 ```
 
-`npm run setup` installs Playwright Chromium, not Poppler, desktop Office, or Office fonts. After setup, bundled assets work offline. Normal rendering needs no Paper connection or paid model API. The invoking agent performs any separately requested content editing; this package is a repository skill and CLI, not a hosted service or MCP server.
+Each narrative PDF has self-contained HTML, a QA record and optional PNGs of its
+actual pages. Source-editable HTML is not a word processor. Ordinary Markdown,
+DOCX and JSON inputs all select the professional route. Supplied content is never
+rewritten merely to fit a layout. Unsupported legacy features require an explicit
+supported adaptation rather than silently returning to the old design.
 
-## Use with agents
+## Current visual contract
 
-Start Codex or Claude Code in this checkout:
+- White surfaces only: no paper grain, cream, ivory, beige, warm gradients or
+  off-white document elements.
+- The original Rōvn logo, Crimson Pro display type and precise Inter body text carry the identity.
+- Amber supports the mark, section numerals and selected emphasis. A bounded ink or amber callout is available; do not blanket pages or tables with it.
+- Useful layout differences: split memo masthead, board reading rail, strong
+  proposal opening, editorial reports, numerical pricing, conventional legal text.
+- Preserve source wording, figures, qualifiers, references and formal labels.
+- Review every actual PDF page or slide. Check readability, content, page breaks,
+  table continuation, links, fonts and output in its intended application.
+- A green build is not visual approval, accessibility certification or permission
+  to send. [Validation](docs/validation.md) records tested scope and limitations.
 
-- Codex: `$use-rovn-design-system Turn examples/professional/executive-memo.md into a PDF and editable Word document. Preserve the content and review the outputs.`
-- Claude Code: `/use-rovn-design-system examples/professional/executive-memo.md — create a PDF and editable Word document.`
+## Historical reproduction
 
-The canonical skill is [`.agents/skills/use-rovn-design-system/SKILL.md`](.agents/skills/use-rovn-design-system/SKILL.md). The [Claude entry point](.claude/skills/use-rovn-design-system/SKILL.md) delegates to it. If discovery does not refresh after cloning, start a new session in this checkout.
+The old Paper-derived renderer remains available with explicit
+`--layout report-v1` for archival reproduction and reference tests only. It is
+retired for new Rōvn deliverables. Its amber image headers, paper palette, lettered
+section openers and dark-page settings are not current design guidance. See
+[the archived guide](.agents/skills/use-rovn-design-system/LEGACY_REPORT.md) and
+[v1 schema](docs/document-model-v1.md) when reproducing a historical artifact.
+[Paper sync](docs/paper-sync.md) concerns original template capture, not automatic
+adoption of that visual style.
 
-To share it across projects or agent tools, keep one complete checkout and point each agent at its canonical skill by absolute path:
+## Licensing and installation status
 
-> Read `/absolute/path/use-rovn-design-system/.agents/skills/use-rovn-design-system/SKILL.md` and use that checkout to render my document. Preserve the supplied content, select the appropriate family, and review every output page.
-
-Do not copy only `SKILL.md`: its relative references require the full repository, renderer, fonts and assets. A chat-only agent needs a local runner with file and command access. This repository does not change global agent configuration automatically.
-
-## Generate documents
-
-Run commands from the repository root. Markdown and DOCX input use the professional route by default; prepared v1 JSON retains its legacy route unless explicitly migrated.
-
-```sh
-# Prepare and inspect a narrative model, then produce PDF and actual-page PNGs.
-node scripts/render.mjs examples/professional/executive-memo.md --prepare output/working/memo.json
-node scripts/render.mjs output/working/memo.json --out output/memo.pdf --screenshots
-
-# Export native editable formats with the appropriate model.
-node scripts/export-office.mjs output/working/memo.json --out output/memo.docx
-node scripts/export-office.mjs examples/professional/pilot-deck.json --out output/pilot.pptx
-node scripts/export-office.mjs examples/professional/pricing-workbook.json --out output/pricing.xlsx
-
-# Select the original report layout explicitly when wanted.
-node scripts/render.mjs examples/sample.md --layout report-v1 --dark-pages off --out output/original-report.pdf
-```
-
-PDF rendering also writes a self-contained HTML source and `.qa.json`. `--screenshots` adds PNGs of actual PDF pages. Choose `--family proposal` (or another supported family) when automatic classification is unsuitable. See [narrative fields and commands](docs/document-model.md), [Office schemas](docs/office-formats.md), and the [legacy report guide](.agents/skills/use-rovn-design-system/LEGACY_REPORT.md).
-
-The original report's dark pages, lettered sections, fixed artwork and Lucide callouts are layout-specific, not universal document defaults. Explicit Paper-template updates use the [sync procedure](docs/paper-sync.md). Responsive websites and app layouts are outside this renderer's scope.
-
-## Examples and verification
-
-The [professional example library](examples/professional/) contains synthetic narrative, presentation and workbook inputs. The legal reference is a clearly attributed excerpt with [source provenance](examples/professional/sources/commonpaper-nda/PROVENANCE.md), not a complete or signing-ready agreement.
-
-```sh
-node scripts/build-professional-gallery.mjs output/gallery
-```
-
-The [dated validation record](docs/validation.md) separates automated checks, actual-page review, native application checks and remaining limits. The professional upgrade's complete suite passed 30 tests; its ten narrative samples produced 22 reviewed PDF pages. These are bounded sample results, not universal quality or compatibility guarantees.
-
-Important limits:
-
-- Word export rejects unsupported images, cards, callouts and table-layout options. DOCX import is not lossless round-trip editing.
-- Slides and workbooks require their own models; arbitrary prose is not silently converted into slides or cells. ExcelJS writes supplied formula caches and does not recalculate them.
-- Native Office fonts are declared, not embedded. Installed fonts and target-application review determine visual fidelity.
-- Professional PDF notes are linked endnotes. No PDF/A, PDF/UA, PDF/X, assistive-technology conformance or legal signing-readiness certification is claimed.
-- Four transitive dependency audit findings remain in the dated audit. The [Office documentation](docs/office-formats.md) records advisories and supported-path constraints; this is not a clean security audit.
-
-Review every actual page, preserve source content and evidence, and disclose unsupported requirements. Public examples do not establish company traction, commercial terms, approvals or policy.
-
-To update a clean checkout, use `git pull --ff-only`, then `npm ci`; rerun browser setup when Playwright changes. Preserve local changes before updating.
+Lucide attribution is in `licenses/lucide.txt`. Font licenses are bundled under
+`assets/fonts/`. Supplied imagery remains project-use restricted; this repository
+grants no additional redistribution rights. This fork extends Jerry’s original repository. Publication on a Rōvn branch
+is not acceptance into Jerry’s upstream or universal format/quality certification.
+See [attribution and usage restrictions](NOTICE.md).

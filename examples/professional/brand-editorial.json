@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 2,
+  "kind": "document",
+  "metadata": {
+    "eyebrow": "The Rōvn document system",
+    "title": "Clarity, with character.",
+    "subtitle": "An editorial direction for the work we put our name on.",
+    "date": "2026-10-03"
+  },
+  "intent": {
+    "family": "report",
+    "audience": "Rōvn founder and design team",
+    "readerAction": "Review typography, brand presence and document composition",
+    "designRationale": "A one-page brand specimen: original Paper logo, expressive variable serif display, deliberate amber, pure-white reading surface and useful typographic contrast. Not a company performance report."
+  },
+  "sections": [
+    {"id":"point-of-view","title":"A recognizable point of view","blocks":[
+      {"type":"lead","text":"Beautiful documents begin with a clear purpose. The identity should make that purpose easier to see."},
+      {"type":"paragraph","text":"The original Rōvn mark anchors the page. Crimson Pro brings character to the headline; Inter keeps the details precise. Amber carries emphasis. Space gives the work room to breathe."}
+    ]},
+    {"id":"composition","title":"The right shape for the occasion","blocks":[
+      {"type":"cards","items":[
+        {"title":"Decide","text":"A concise memo puts the decision and its consequences together."},
+        {"title":"Understand","text":"A report gives evidence a readable rhythm and a clear hierarchy."},
+        {"title":"Compare","text":"A proposal makes scope, price and responsibility easy to evaluate."}
+      ]}
+    ]},
+    {"id":"signature","title":"Presence, with restraint","blocks":[
+      {"type":"callout","variant":2,"title":"The brand belongs in the details.","text":"The mark. The typography. An amber numeral. A deliberate change of scale. A document should feel like Rōvn before the reader reaches the footer."}
+    ]}
+  ]
+}

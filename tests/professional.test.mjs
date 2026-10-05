@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
+import { createHash } from 'node:crypto';
 import { loadInput } from '../src/input.mjs';
 import { inferDocumentIntent, toProfessionalDocument, validateProfessionalDocument } from '../src/professional-model.mjs';
 import { renderProfessional } from '../src/professional-render.mjs';
@@ -61,5 +62,32 @@ test('legal renderer produces editable semantic HTML and a real PDF', async () =
     assert.equal((await fs.readFile(out)).subarray(0, 5).toString(), '%PDF-');
     const html = await fs.readFile(out.replace('.pdf', '.html'), 'utf8');
     assert.match(html, /family-legal/); assert.match(html, /class="clause"/); assert.match(html, /Exact supplied wording/);
+  } finally { await fs.rm(directory, { recursive: true, force: true }); }
+});
+
+test('proposal export preserves callout and numbered card content including notes', async () => {
+  const directory = await fs.mkdtemp(path.join(os.tmpdir(), 'rovn-proposal-content-'));
+  try {
+    const document = validateProfessionalDocument({
+      schemaVersion: 2, kind: 'document', metadata: { title: 'Synthetic client proposal' },
+      intent: { family: 'proposal' }, sections: [{ title: 'Business case', blocks: [
+        { type: 'callout', title: 'Explicit assumptions', text: 'A supplied limitation with a unique sentence.', note: 'Callout source note survives.' },
+        { type: 'cards', items: [
+          { title: 'First outcome', text: 'Collect the supplied evidence.' },
+          { title: 'Second outcome', text: 'Keep the human approval.' }
+        ], note: 'Card source note survives.' }
+      ] }]
+    });
+    const out = path.join(directory, 'proposal.pdf');
+    const result = await renderProfessional(document, { out });
+    assert.deepEqual(result.issues, []);
+    assert.equal(result.pageCount, 1);
+    const sourceFiles = ['src/professional-browser.mjs', 'src/professional-model.mjs', 'src/professional.css', 'src/professional-render.mjs', 'src/runtime.mjs', 'assets/brand/rovn-lockup.svg', 'assets/fonts/inter/InterVariable.woff2', 'assets/fonts/inter/InterVariable-Italic.woff2', 'assets/fonts/Crimson_Pro/CrimsonPro-VariableFont_wght.ttf', 'assets/fonts/Crimson_Pro/CrimsonPro-Italic-VariableFont_wght.ttf', 'assets/fonts/fragment-mono/FragmentMono-Regular.woff2', 'src/proposal.css'];
+    const sourceBytes = await Promise.all(sourceFiles.map(file => fs.readFile(new URL(`../${file}`, import.meta.url))));
+    assert.equal(result.professionalRendererHash, createHash('sha256').update(Buffer.concat(sourceBytes)).digest('hex'), 'provenance covers renderer, proposal CSS, exact logo and embedded font bytes');
+    const html = await fs.readFile(out.replace('.pdf', '.html'), 'utf8');
+    for (const phrase of ['Explicit assumptions', 'A supplied limitation with a unique sentence.', 'Callout source note survives.', 'First outcome', 'Second outcome', 'Card source note survives.']) assert.ok(html.includes(phrase), phrase);
+    assert.match(html, /name="viewport"/);
+    assert.equal((await fs.readFile(out)).subarray(0, 5).toString(), '%PDF-');
   } finally { await fs.rm(directory, { recursive: true, force: true }); }
 });

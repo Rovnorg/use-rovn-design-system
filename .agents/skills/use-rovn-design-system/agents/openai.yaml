@@ -1,4 +1,4 @@
 interface:
   display_name: "Use Rōvn Design System"
   short_description: "Create and verify Rōvn PDFs and editable Office files"
-  default_prompt: "Use $use-rovn-design-system to select the document family and supported file format, preserve the supplied content, and verify the finished Rōvn document."
+  default_prompt: "Use $use-rovn-design-system to choose the strongest composition for the reader and occasion, apply the original Rōvn identity and current typographic direction, preserve supplied content, and inspect the finished document."

@@ -9,16 +9,21 @@ import { inline } from './input.mjs';
 import {
   AlignmentType, BorderStyle, Document, ExternalHyperlink, Footer,
   HeadingLevel, Packer, PageBreak, PageNumber, Paragraph, Table, TableCell,
-  TableOfContents, TableRow, TextRun, WidthType, FootnoteReferenceRun, Bookmark, InternalHyperlink,
+  TableOfContents, TableRow, TextRun, WidthType, FootnoteReferenceRun, Bookmark, InternalHyperlink, ImageRun,
 } from 'docx';
 import pptxgen from 'pptxgenjs';
 import ExcelJS from 'exceljs';
 
-const BRAND = { amber: 'C68A35', ink: '1C1A18', muted: '5B5752', pale: 'F5F1EA', line: 'D9D1C6' };
-// This is the internal family name in the bundled InterVariable.woff2, not an
-// invented alias. Native Office still needs an installed Office-usable font.
-const BASE_FONT = 'Inter Variable';
-const LEGAL_FONT = 'Times New Roman';
+// Native Office keeps white canvases, the original mark and editorial display type.
+// Amber supports the identity; data remains on a conventional white grid.
+const BRAND = { amber: 'B66A09', ink: '15181E', muted: '5B616B', line: 'D9DDE3' };
+// These are Office-facing font names. Native packages do not embed the bundled
+// web fonts, so the recipient needs the matching desktop font installed.
+const BASE_FONT = 'Inter';
+const EDITORIAL_FONT = 'Crimson Pro';
+const LONG_FORM_FAMILIES = new Set(['report', 'legal']);
+const BRAND_LOCKUP_PATH = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'assets', 'brand', 'rovn-lockup.svg');
+let brandLockupPromise;
 const linkPattern = /^(https?:\/\/|mailto:|#)[^\s]+$/i;
 const blockTypes = new Set(['paragraph', 'lead', 'heading', 'list-item', 'table', 'code', 'callout', 'cards', 'image', 'rule', 'key-values', 'signature', 'clause', 'definition-list', 'page-break']);
 
@@ -31,8 +36,20 @@ function safeName(value, label) { required(/^[^\\/:*?"<>|]{1,31}$/.test(value), 
 function validIsoDate(value) { return typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value) && new Date(`${value}T00:00:00.000Z`).toISOString().slice(0, 10) === value; }
 function ensureOut(out, format) { required(typeof out === 'string' && out, 'out is required.'); required(path.extname(out).toLowerCase() === `.${format}`, `Output path must end in .${format}.`); return out; }
 function plain(value = '') { return new JSDOM(`<body>${String(value)}</body>`).window.document.body.textContent || ''; }
+async function brandLockup() {
+  brandLockupPromise ??= (async () => {
+    const svg = await fs.readFile(BRAND_LOCKUP_PATH);
+    const browser = await chromium.launch({ headless: true });
+    try {
+      const page = await browser.newPage({ viewport: { width: 274, height: 68 }, deviceScaleFactor: 2 });
+      await page.setContent(`<style>html,body{margin:0;background:transparent}svg{display:block;width:274px;height:68px}</style>${svg.toString()}`);
+      return { svg, png: await page.locator('svg').screenshot({ type: 'png' }) };
+    } finally { await browser.close(); }
+  })();
+  return brandLockupPromise;
+}
 const narrativeMetadataKeys = ['title', 'author', 'date', 'version', 'subtitle', 'recipient', 'sender', 'subject', 'confidentiality', 'eyebrow', 'summary', 'smallPrint'];
-const narrativeIntentKeys = ['family', 'audience', 'purpose', 'readingMode', 'editable', 'confidentiality'];
+const narrativeIntentKeys = ['family', 'audience', 'purpose', 'readingMode', 'editable', 'confidentiality', 'readerAction', 'designRationale'];
 const inlineTags = new Set(['STRONG', 'B', 'EM', 'I', 'CODE', 'S', 'STRIKE', 'SUP', 'SUB', 'BR', 'A', 'SPAN']);
 function normaliseNarrative(input) {
   required(input?.schemaVersion === 2 && input.kind === 'document', 'DOCX requires schemaVersion: 2 and kind: "document".');
@@ -41,7 +58,7 @@ function normaliseNarrative(input) {
   narrativeMetadataKeys.filter(key => key !== 'title' && input.metadata[key] != null).forEach(key => text(input.metadata[key], `metadata.${key}`));
   required(input.intent && typeof input.intent === 'object', 'Document intent is required.'); onlyKeys(input.intent, narrativeIntentKeys, 'intent');
   required(['memo', 'business-plan', 'report', 'board', 'proposal', 'legal', 'letter', 'sop', 'case-study', 'pricing'].includes(input.intent.family), 'Document intent.family is unsupported.');
-  ['audience', 'purpose', 'readingMode', 'confidentiality'].forEach(key => { if (input.intent[key] != null) text(input.intent[key], `intent.${key}`); });
+  ['audience', 'purpose', 'readingMode', 'confidentiality', 'readerAction', 'designRationale'].forEach(key => { if (input.intent[key] != null) text(input.intent[key], `intent.${key}`); });
   if (input.intent.editable != null) required(typeof input.intent.editable === 'boolean', 'intent.editable must be true or false.');
   array(input.sections, 'sections'); required(input.sections.length > 0, 'Document needs at least one section.');
   if (input.footnotes != null) required(typeof input.footnotes === 'object' && !Array.isArray(input.footnotes), 'footnotes must be an object.');
@@ -187,12 +204,34 @@ function docxNeedsContents(doc) {
   doc.sections.forEach(section => { add(section.title); section.blocks.forEach(addBlock); }); doc.appendix.forEach(addBlock);
   return words.join(' ').trim().split(/\s+/).filter(Boolean).length > 900;
 }
+function docxProfile(family) {
+  const longForm = LONG_FORM_FAMILIES.has(family);
+  const compact = ['memo', 'letter', 'sop'].includes(family);
+  const commercial = ['proposal', 'pricing'].includes(family);
+  return {
+    bodyFont: BASE_FONT,
+    displayFont: EDITORIAL_FONT,
+    bodySize: longForm ? 23 : 22,
+    line: longForm ? 300 : compact ? 264 : 282,
+    titleSize: longForm ? 56 : commercial ? 54 : compact ? 48 : 52,
+    heading1: longForm ? 32 : commercial ? 30 : 28,
+    heading2: longForm ? 27 : 25,
+    heading3: 22,
+    titleAfter: commercial ? 240 : longForm ? 300 : 200,
+    margin: longForm
+      ? { top: 960, right: 1080, bottom: 960, left: 1080 }
+      : { top: 720, right: 840, bottom: 720, left: 840 },
+  };
+}
 async function renderDocx(input, out) {
-  const doc = normaliseNarrative(input); const legal = doc.intent.family === 'legal'; const font = legal ? LEGAL_FONT : BASE_FONT;
-  const children = [new Paragraph({ text: doc.metadata.title, heading: HeadingLevel.TITLE, alignment: legal ? AlignmentType.CENTER : AlignmentType.LEFT, spacing: { after: 180 } })];
+  const doc = normaliseNarrative(input); const legal = doc.intent.family === 'legal'; const profile = docxProfile(doc.intent.family); const font = profile.bodyFont; const brand = await brandLockup();
+  const children = [
+    new Paragraph({ children: [new ImageRun({ data: brand.svg, type: 'svg', fallback: { data: brand.png, type: 'png', transformation: { width: 137, height: 34 } }, transformation: { width: 137, height: 34 } })], spacing: { after: 160 } }),
+    new Paragraph({ text: doc.metadata.title, heading: HeadingLevel.TITLE, alignment: legal ? AlignmentType.CENTER : AlignmentType.LEFT, spacing: { after: profile.titleAfter } }),
+  ];
   if (doc.metadata.subtitle) children.push(new Paragraph({ text: doc.metadata.subtitle, spacing: { after: 120 } }));
-  const meta = [['Eyebrow', doc.metadata.eyebrow], ['Summary', doc.metadata.summary], ['Date', doc.metadata.date], ['Author', doc.metadata.author], ['Recipient', doc.metadata.recipient], ['Sender', doc.metadata.sender], ['Subject', doc.metadata.subject], ['Confidentiality', doc.metadata.confidentiality], ['Intent confidentiality', doc.intent.confidentiality], ['Version', doc.metadata.version]].filter(([, value]) => value);
-  if (meta.length) children.push(...meta.map(([label, value]) => new Paragraph({ children: [new TextRun({ text: `${label}: `, bold: true, font }), new TextRun({ text: String(value), font })] })));
+  const meta = [['Eyebrow', doc.metadata.eyebrow], ['Summary', doc.metadata.summary], ['Date', doc.metadata.date], ['Author', doc.metadata.author], ['Recipient', doc.metadata.recipient], ['Sender', doc.metadata.sender], ['Subject', doc.metadata.subject], ['Confidentiality', doc.metadata.confidentiality], ['Intent confidentiality', doc.intent.confidentiality !== doc.metadata.confidentiality ? doc.intent.confidentiality : undefined], ['Version', doc.metadata.version]].filter(([, value]) => value);
+  if (meta.length) children.push(...meta.map(([label, value], index) => new Paragraph({ children: [new TextRun({ text: `${label}: `, font, size: 18, color: BRAND.muted }), new TextRun({ text: String(value), font, size: 18, color: BRAND.muted })], spacing: { after: index === meta.length - 1 ? 220 : 40, line: 240 } })));
   if (docxNeedsContents(doc)) children.push(new TableOfContents('Contents', { hyperlink: true, headingStyleRange: '1-3' }));
   const anchors = new Set(doc.sections.map(section => section.id));
   function appendBlock(block) {
@@ -205,7 +244,7 @@ async function renderDocx(input, out) {
     if (block.note) children.push(new Paragraph({ children: inlineRuns(block.note, font, anchors, { italics: true }), spacing: { after: 100 } }));
   }
   for (const section of doc.sections) {
-    if (section.title) children.push(new Paragraph({ children: [new Bookmark({ id: section.id, children: [new TextRun({ text: section.title, font, bold: true })] })], heading: HeadingLevel.HEADING_1, pageBreakBefore: section.pageBreakBefore, keepNext: true }));
+    if (section.title) children.push(new Paragraph({ children: [new Bookmark({ id: section.id, children: [new TextRun({ text: section.title, font: profile.displayFont, bold: true })] })], heading: HeadingLevel.HEADING_1, pageBreakBefore: section.pageBreakBefore, keepNext: true }));
     else children.push(new Paragraph({ children: [new Bookmark({ id: section.id, children: [] })], spacing: { before: 0, after: 0 }, pageBreakBefore: section.pageBreakBefore }));
     section.blocks.forEach(appendBlock);
   }
@@ -223,22 +262,24 @@ async function renderDocx(input, out) {
   }
   if (doc.metadata.smallPrint) children.push(new Paragraph({ text: doc.metadata.smallPrint, spacing: { before: 160 } }));
   const footnotes = Object.fromEntries(Object.entries(doc.footnotes).map(([id, html]) => [id, { children: [new Paragraph({ children: inlineRuns(html, font, anchors) })] }]));
-  const file = new Document({ creator: doc.metadata.author || '', title: doc.metadata.title, description: `Editable ${doc.intent.family} document`, footnotes, styles: { default: { document: { run: { font, size: 22 }, paragraph: { spacing: { line: 276 } } }, heading1: { run: { font, size: 30, bold: true, color: legal ? BRAND.ink : BRAND.amber } }, heading2: { run: { font, size: 25, bold: true } }, heading3: { run: { font, size: 22, bold: true } }, title: { run: { font: legal ? LEGAL_FONT : 'Crimson Pro', size: 42, bold: true, color: BRAND.ink } }, Code: { run: { font: 'Fragment Mono', size: 18 } } } }, sections: [{ properties: { page: { size: { width: 12240, height: 15840 }, margin: { top: 720, right: 720, bottom: 720, left: 720 } } }, footers: { default: new Footer({ children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: 'Page ', font }), new TextRun({ children: [PageNumber.CURRENT], font })] })] }) }, children }] });
+  const file = new Document({ creator: doc.metadata.author || '', title: doc.metadata.title, description: `Editable ${doc.intent.family} document`, footnotes, styles: { default: { document: { run: { font, size: profile.bodySize, color: BRAND.ink }, paragraph: { spacing: { line: profile.line } } }, heading1: { run: { font: profile.displayFont, size: profile.heading1, bold: true, color: BRAND.ink } }, heading2: { run: { font: profile.displayFont, size: profile.heading2, bold: true, color: BRAND.ink } }, heading3: { run: { font: profile.displayFont, size: profile.heading3, bold: true, color: BRAND.ink } }, title: { run: { font: profile.displayFont, size: profile.titleSize, bold: false, color: BRAND.ink } }, Code: { run: { font: 'Fragment Mono', size: 18, color: BRAND.ink } } } }, sections: [{ properties: { page: { size: { width: 12240, height: 15840 }, margin: profile.margin } }, footers: { default: new Footer({ children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: 'Page ', font, color: BRAND.muted }), new TextRun({ children: [PageNumber.CURRENT], font, color: BRAND.muted })] })] }) }, children }] });
   await fs.mkdir(path.dirname(out), { recursive: true }); await fs.writeFile(out, await Packer.toBuffer(file));
-  const fontLimit = legal ? 'Office does not embed the declared Times New Roman or Fragment Mono font files; recipients need those fonts for exact typography.' : 'Office does not embed the declared Inter Variable or Fragment Mono font files; recipients need those fonts for exact typography.';
+  const fontLimit = 'Office does not embed the declared Crimson Pro, Inter, or Fragment Mono font files; recipients need those fonts for exact typography.';
   return { artifact: out, verified: ['OOXML package written', 'editable Word paragraphs/tables/styles'], limitations: [fontLimit, 'Table of contents fields update when opened in a compatible editor.'] };
 }
 
 function pptText(slide, value, options) { slide.addText(value, { fontFace: BASE_FONT, color: BRAND.ink, margin: 0, breakLine: false, ...options }); }
 function footer(slide, number) { pptText(slide, `RōVN  |  ${number}`, { x: 0.5, y: 7.08, w: 12.3, h: 0.18, fontSize: 7, color: BRAND.muted, align: 'right' }); }
 const PPT_BOXES = {
-  title: { title: { x: 0.5, y: 0.7, w: 12.0, h: 0.75, font: 'Crimson Pro', size: 38, bold: true }, subtitle: { x: 0.5, y: 1.55, w: 11.7, h: 0.35, font: BASE_FONT, size: 13 }, body: { x: 0.5, y: 2.15, w: 7.8, h: 1.8, font: BASE_FONT, size: 19 } },
-  standard: { title: { x: 0.5, y: 0.7, w: 12.0, h: 0.55, font: 'Crimson Pro', size: 27, bold: true }, subtitle: { x: 0.5, y: 1.34, w: 11.7, h: 0.35, font: BASE_FONT, size: 13 }, body: { x: 0.5, y: 2.15, w: 7.8, h: 1.8, font: BASE_FONT, size: 19 } },
-  columnHeading: { x: 0.8, y: 2.28, w: 5.1, h: 0.35, font: BASE_FONT, size: 16, bold: true },
-  columnItems: { x: 0.8, y: 2.9, w: 5.0, h: 2.95, font: BASE_FONT, size: 14 },
-  closing: { x: 0.5, y: 2.45, w: 7.2, h: 0.45, font: BASE_FONT, size: 20 },
-  table: { x: 0.5, y: 2.0, w: 12.25, h: 4.5, font: BASE_FONT, size: 11, margin: 0.08 },
+  title: { title: { x: 0.7, y: 1.16, w: 11.4, h: 0.68, font: EDITORIAL_FONT, size: 35, bold: false }, subtitle: { x: 0.7, y: 2.0, w: 10.8, h: 0.3, font: BASE_FONT, size: 13 }, body: { x: 0.7, y: 3.02, w: 7.6, h: 1.6, font: BASE_FONT, size: 18 } },
+  section: { title: { x: 0.7, y: 2.22, w: 10.8, h: 0.7, font: EDITORIAL_FONT, size: 36, bold: false }, subtitle: { x: 0.7, y: 3.08, w: 9.8, h: 0.3, font: BASE_FONT, size: 13 }, body: { x: 0.7, y: 3.82, w: 7.4, h: 1.45, font: BASE_FONT, size: 18 } },
+  standard: { title: { x: 0.7, y: 1.02, w: 11.4, h: 0.48, font: EDITORIAL_FONT, size: 25, bold: false }, subtitle: { x: 0.7, y: 1.62, w: 10.8, h: 0.28, font: BASE_FONT, size: 12 }, body: { x: 0.7, y: 2.14, w: 7.6, h: 1.8, font: BASE_FONT, size: 18 } },
+  columnHeading: { x: 0.7, y: 2.28, w: 5.15, h: 0.32, font: BASE_FONT, size: 15, bold: true },
+  columnItems: { x: 0.7, y: 2.86, w: 5.15, h: 2.95, font: BASE_FONT, size: 13 },
+  closing: { x: 0.7, y: 2.45, w: 7.2, h: 0.4, font: BASE_FONT, size: 17 },
+  table: { x: 0.7, y: 2.0, w: 11.9, h: 4.5, font: BASE_FONT, size: 11, margin: 0.08 },
 };
+function pptLayout(layout) { return layout === 'title' ? PPT_BOXES.title : layout === 'section' ? PPT_BOXES.section : PPT_BOXES.standard; }
 function boxPoints(box) { return { width: box.w * 72, height: box.h * 72 }; }
 async function preflightPresentation(deck) {
   const root = path.dirname(fileURLToPath(import.meta.url));
@@ -249,15 +290,15 @@ async function preflightPresentation(deck) {
   const browser = await chromium.launch({ headless: true });
   try {
     const page = await browser.newPage();
-    await page.setContent(`<style>@font-face{font-family:'${BASE_FONT}';src:url(data:font/woff2;base64,${inter.toString('base64')}) format('woff2')}@font-face{font-family:'Crimson Pro';src:url(data:font/ttf;base64,${crimson.toString('base64')}) format('truetype')}</style>`);
-    await page.evaluate(async fonts => { await Promise.all(fonts.map(font => document.fonts.load(font))); await document.fonts.ready; for (const font of fonts) if (!document.fonts.check(font)) throw new Error(`Presentation preflight could not load ${font}.`); }, [`400 16px "${BASE_FONT}"`, `700 16px "${BASE_FONT}"`, '700 16px "Crimson Pro"']);
+    await page.setContent(`<style>@font-face{font-family:'${BASE_FONT}';src:url(data:font/woff2;base64,${inter.toString('base64')}) format('woff2');font-weight:100 900}@font-face{font-family:'${EDITORIAL_FONT}';src:url(data:font/ttf;base64,${crimson.toString('base64')}) format('truetype');font-weight:200 900}</style>`);
+    await page.evaluate(async fonts => { await Promise.all(fonts.map(font => document.fonts.load(font))); await document.fonts.ready; for (const font of fonts) if (!document.fonts.check(font)) throw new Error(`Presentation preflight could not load ${font}.`); }, [`400 16px "${BASE_FONT}"`, `700 16px "${BASE_FONT}"`, `400 16px "${EDITORIAL_FONT}"`]);
     const jobs = [];
     const add = (slide, label, value, box, { paragraphGap = 0 } = {}) => { if (value == null) return; jobs.push({ slide, label, value: Array.isArray(value) ? value : [value], width: boxPoints(box).width, height: boxPoints(box).height, font: box.font, size: box.size, bold: Boolean(box.bold), paragraphGap }); };
     const tableRows = new Map();
     deck.slides.forEach((slide, index) => {
-      const standard = slide.layout === 'title' ? PPT_BOXES.title : PPT_BOXES.standard;
-      add(index + 1, 'title', slide.title, standard.title); add(index + 1, 'subtitle', slide.subtitle, standard.subtitle);
-      if (slide.layout === 'title' || slide.layout === 'section') add(index + 1, 'body', slide.body, standard.body);
+      const layout = pptLayout(slide.layout);
+      add(index + 1, 'title', slide.title, layout.title); add(index + 1, 'subtitle', slide.subtitle, layout.subtitle);
+      if (slide.layout === 'title' || slide.layout === 'section') add(index + 1, 'body', slide.body, layout.body);
       if (slide.layout === 'two-column') { add(index + 1, 'left heading', slide.left.heading, PPT_BOXES.columnHeading); add(index + 1, 'left items', slide.left.items, PPT_BOXES.columnItems, { paragraphGap: 9 }); add(index + 1, 'right heading', slide.right.heading, PPT_BOXES.columnHeading); add(index + 1, 'right items', slide.right.items, PPT_BOXES.columnItems, { paragraphGap: 9 }); }
       if (slide.layout === 'closing') add(index + 1, 'contact', slide.contact, PPT_BOXES.closing);
       if (slide.layout === 'data-table') {
@@ -299,27 +340,31 @@ async function preflightPresentation(deck) {
   } finally { await browser.close(); }
 }
 async function renderPptx(input, out) {
-  const deck = validatePresentation(input); const tableHeights = await preflightPresentation(deck); const pptx = new pptxgen(); pptx.layout = 'LAYOUT_WIDE'; pptx.author = deck.metadata.author || 'Rōvn'; pptx.subject = deck.metadata.title; pptx.title = deck.metadata.title; pptx.company = 'Rōvn'; pptx.lang = 'en-US'; pptx.theme = { headFontFace: 'Crimson Pro', bodyFontFace: BASE_FONT, lang: 'en-US' };
-  deck.slides.forEach((spec, index) => { const slide = pptx.addSlide(); const layout = spec.layout === 'title' ? PPT_BOXES.title : PPT_BOXES.standard; slide.background = { color: spec.layout === 'section' ? BRAND.ink : 'FFFFFF' }; const dark = spec.layout === 'section'; const headingColor = dark ? 'FFFFFF' : BRAND.ink; slide.addShape(pptx.ShapeType.line, { x: 0.5, y: 0.42, w: 1.0, h: 0, line: { color: BRAND.amber, width: 2 } }); pptText(slide, spec.title, { ...layout.title, fontFace: 'Crimson Pro', fontSize: layout.title.size, bold: true, color: headingColor, breakLine: false }); if (spec.subtitle) pptText(slide, spec.subtitle, { ...layout.subtitle, fontSize: layout.subtitle.size, color: dark ? 'E9E1D8' : BRAND.muted });
-    if (spec.layout === 'title' || spec.layout === 'section') { if (spec.body) pptText(slide, spec.body, { ...layout.body, fontSize: layout.body.size, color: dark ? 'F5F1EA' : BRAND.ink, breakLine: false }); }
-    if (spec.layout === 'two-column') { for (const [col, x] of [[spec.left, 0.5], [spec.right, 6.75]]) { slide.addShape(pptx.ShapeType.rect, { x, y: 2.0, w: 5.75, h: 4.35, rectRadius: 0.08, fill: { color: BRAND.pale }, line: { color: BRAND.line, width: 1 } }); pptText(slide, col.heading, { ...PPT_BOXES.columnHeading, x: x + 0.3, fontSize: PPT_BOXES.columnHeading.size, bold: true }); slide.addText(col.items.map(item => ({ text: item, options: { bullet: { indent: 16 }, hanging: 3, breakLine: true } })), { ...PPT_BOXES.columnItems, x: x + 0.3, fontFace: BASE_FONT, color: BRAND.ink, fontSize: PPT_BOXES.columnItems.size, breakLine: false, paraSpaceAfterPt: 9, margin: 0 }); } }
-    if (spec.layout === 'data-table') slide.addTable([spec.table.headers.map(text => ({ text, options: { bold: true, color: 'FFFFFF', fill: { color: BRAND.ink } } })), ...spec.table.rows], { ...PPT_BOXES.table, border: { type: 'solid', color: BRAND.line, pt: 0.75 }, fill: BRAND.pale, color: BRAND.ink, fontFace: BASE_FONT, fontSize: PPT_BOXES.table.size, margin: PPT_BOXES.table.margin, autoFit: false, rowH: tableHeights.get(index + 1), bold: false, paraSpaceAfterPt: 0, valign: 'middle' });
-    if (spec.layout === 'closing') { pptText(slide, spec.contact, { ...PPT_BOXES.closing, fontSize: PPT_BOXES.closing.size, color: BRAND.amber }); }
+  const deck = validatePresentation(input); const tableHeights = await preflightPresentation(deck); const pptx = new pptxgen(); pptx.layout = 'LAYOUT_WIDE'; pptx.author = deck.metadata.author || 'Rōvn'; pptx.subject = deck.metadata.title; pptx.title = deck.metadata.title; pptx.company = 'Rōvn'; pptx.lang = 'en-US'; pptx.theme = { headFontFace: EDITORIAL_FONT, bodyFontFace: BASE_FONT, lang: 'en-US' };
+  deck.slides.forEach((spec, index) => { const slide = pptx.addSlide(); const layout = pptLayout(spec.layout); slide.background = { color: 'FFFFFF' };
+    slide.addImage({ path: BRAND_LOCKUP_PATH, x: 0.7, y: spec.layout === 'section' ? 1.54 : 0.42, w: 1.37, h: 0.342 });
+    if (spec.layout === 'section') { slide.addShape(pptx.ShapeType.line, { x: 0.7, y: 1.99, w: 1.36, h: 0, line: { color: BRAND.ink, width: 1.1 } }); slide.addShape(pptx.ShapeType.line, { x: 1.76, y: 1.99, w: 0.3, h: 0, line: { color: BRAND.amber, width: 1.1 } }); }
+    else slide.addShape(pptx.ShapeType.line, { x: 2.28, y: 0.59, w: 0.3, h: 0, line: { color: BRAND.amber, width: 1.1 } });
+    pptText(slide, spec.title, { ...layout.title, fontFace: layout.title.font, fontSize: layout.title.size, bold: layout.title.bold, color: BRAND.ink, breakLine: false }); if (spec.subtitle) pptText(slide, spec.subtitle, { ...layout.subtitle, fontSize: layout.subtitle.size, color: BRAND.muted });
+    if (spec.layout === 'title' || spec.layout === 'section') { if (spec.body) pptText(slide, spec.body, { ...layout.body, fontSize: layout.body.size, color: BRAND.ink, breakLine: false }); }
+    if (spec.layout === 'two-column') { slide.addShape(pptx.ShapeType.line, { x: 6.5, y: 2.12, w: 0, h: 3.72, line: { color: BRAND.line, width: 0.75 } }); for (const [col, x] of [[spec.left, 0.7], [spec.right, 6.82]]) { pptText(slide, col.heading, { ...PPT_BOXES.columnHeading, x, fontSize: PPT_BOXES.columnHeading.size, bold: true }); slide.addShape(pptx.ShapeType.line, { x, y: 2.7, w: 5.0, h: 0, line: { color: BRAND.line, width: 0.75 } }); slide.addText(col.items.map(item => ({ text: item, options: { bullet: { indent: 16 }, hanging: 3, breakLine: true } })), { ...PPT_BOXES.columnItems, x, fontFace: BASE_FONT, color: BRAND.ink, fontSize: PPT_BOXES.columnItems.size, breakLine: false, paraSpaceAfterPt: 9, margin: 0 }); } }
+    if (spec.layout === 'data-table') { slide.addShape(pptx.ShapeType.line, { x: PPT_BOXES.table.x, y: 2.46, w: PPT_BOXES.table.w, h: 0, line: { color: BRAND.line, width: 1 } }); slide.addTable([spec.table.headers.map(text => ({ text, options: { bold: true, color: BRAND.ink } })), ...spec.table.rows], { ...PPT_BOXES.table, border: { type: 'solid', color: BRAND.line, pt: 0.75 }, color: BRAND.ink, fontFace: BASE_FONT, fontSize: PPT_BOXES.table.size, margin: PPT_BOXES.table.margin, autoFit: false, rowH: tableHeights.get(index + 1), bold: false, paraSpaceAfterPt: 0, valign: 'middle' }); }
+    if (spec.layout === 'closing') { pptText(slide, spec.contact, { ...PPT_BOXES.closing, fontSize: PPT_BOXES.closing.size, color: BRAND.ink }); }
     if (spec.notes) slide.addNotes(spec.notes); footer(slide, index + 1);
   }); await fs.mkdir(path.dirname(out), { recursive: true }); await pptx.writeFile({ fileName: out, compression: true });
-  return { artifact: out, verified: ['OOXML presentation package written', 'editable PowerPoint text, tables, and shapes'], limitations: ['Office does not embed the declared Crimson Pro or Inter Variable font files; recipients need those fonts for exact typography.', 'PPTX uses fixed layout boxes and rejects unknown layouts; content must be edited when it exceeds its declared layout.'] };
+  return { artifact: out, verified: ['OOXML presentation package written', 'editable PowerPoint text, tables, and shapes'], limitations: ['Office does not embed the declared Crimson Pro or Inter font files; recipients need them for exact typography.', 'PPTX uses fixed layout boxes and rejects unknown layouts; content must be edited when it exceeds its declared layout.'] };
 }
 
 function columnFormat(type) { return ({ currency: '$#,##0.00;[Red]-$#,##0.00', percent: '0.0%', date: 'yyyy-mm-dd', number: '#,##0.00' })[type]; }
 async function renderXlsx(input, out) {
   const bookModel = validateWorkbook(input); const workbook = new ExcelJS.Workbook(); workbook.creator = bookModel.metadata.author || 'Rōvn'; workbook.created = new Date(); workbook.properties.title = bookModel.metadata.title;
-  for (const spec of bookModel.sheets) { const sheet = workbook.addWorksheet(spec.name, { views: [{ state: 'frozen', ySplit: 1 }] }); sheet.columns = spec.columns.map(column => ({ header: column.header, key: column.key, width: column.width || Math.min(48, Math.max(12, column.header.length + 4)) })); const header = sheet.getRow(1); header.font = { name: BASE_FONT, bold: true, color: { argb: 'FFFFFFFF' } }; header.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: `FF${BRAND.ink}` } }; header.alignment = { vertical: 'middle', wrapText: true }; header.height = 26;
+  for (const spec of bookModel.sheets) { const sheet = workbook.addWorksheet(spec.name, { properties: { tabColor: { argb: `FF${BRAND.amber}` } }, views: [{ state: 'frozen', ySplit: 1 }] }); sheet.columns = spec.columns.map(column => ({ header: column.header, key: column.key, width: column.width || Math.min(48, Math.max(12, column.header.length + 4)) })); const header = sheet.getRow(1); header.font = { name: BASE_FONT, bold: true, color: { argb: `FF${BRAND.ink}` } }; header.border = { bottom: { style: 'medium', color: { argb: `FF${BRAND.line}` } } }; header.alignment = { vertical: 'middle', wrapText: true }; header.height = 26;
     spec.rows.forEach(row => { const record = {}; for (const column of spec.columns) { const value = row[column.key]; record[column.key] = column.type === 'formula' ? { formula: value.formula, result: value.result } : column.type === 'date' && typeof value === 'string' ? new Date(value) : value; } sheet.addRow(record); });
     for (const column of spec.columns) { const cells = sheet.getColumn(column.key); cells.font = { name: BASE_FONT, size: 10 }; cells.alignment = { vertical: 'top', wrapText: column.type === 'text' }; const fmt = columnFormat(column.type); if (fmt) cells.numFmt = fmt; }
-    header.font = { name: BASE_FONT, bold: true, color: { argb: 'FFFFFFFF' } }; header.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: `FF${BRAND.ink}` } }; header.alignment = { vertical: 'middle', wrapText: true };
+    header.font = { name: BASE_FONT, bold: true, color: { argb: `FF${BRAND.ink}` } }; header.border = { bottom: { style: 'medium', color: { argb: `FF${BRAND.line}` } } }; header.alignment = { vertical: 'middle', wrapText: true };
     sheet.autoFilter = { from: 'A1', to: { row: Math.max(1, sheet.rowCount), column: spec.columns.length } }; sheet.pageSetup = { orientation: spec.orientation || 'landscape', fitToPage: true, fitToWidth: 1, fitToHeight: 0, margins: { left: 0.3, right: 0.3, top: 0.5, bottom: 0.5, header: 0.2, footer: 0.2 } };
   } await fs.mkdir(path.dirname(out), { recursive: true }); await workbook.xlsx.writeFile(out);
-  return { artifact: out, verified: ['OOXML workbook package written', 'editable worksheets, typed values, and formulas with supplied cached results'], limitations: ['ExcelJS does not calculate formulas. Formula result values are supplied caches; open in Excel/LibreOffice to recalculate.', 'Office does not embed the declared Inter Variable font files; recipients need it for exact typography.'] };
+  return { artifact: out, verified: ['OOXML workbook package written', 'editable worksheets, typed values, and formulas with supplied cached results'], limitations: ['ExcelJS does not calculate formulas. Formula result values are supplied caches; open in Excel/LibreOffice to recalculate.', 'Office does not embed the declared Inter font files; recipients need it for exact typography.'] };
 }
 
 export async function renderOffice(doc, { out, format } = {}) {

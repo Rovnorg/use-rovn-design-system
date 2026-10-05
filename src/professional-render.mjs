@@ -25,8 +25,16 @@ export async function renderProfessional(input, { out, screenshots = false, inpu
     await page.route('**/*', route => route.request().url().startsWith('data:') ? route.continue() : route.abort());
     await page.setContent(html, { waitUntil: 'load' });
     await page.evaluate(() => document.fonts.ready);
-    const report = await page.evaluate(() => window.ROVN_PROFESSIONAL_RESULT);
-    report.warnings = Object.keys(doc.footnotes).length ? ['Professional PDF renders supplied footnotes as linked endnotes. Use report-v1 or a supported Word route when page-associated footnotes are required.'] : [];
+    // The inline report can run before embedded images have decoded.
+    // Recheck only this asynchronous condition after load; retain every other issue.
+    await page.evaluate(async () => { await Promise.all([...document.images].map(image => image.decode())); });
+    const report = await page.evaluate(() => {
+      const result = window.ROVN_PROFESSIONAL_RESULT;
+      result.issues = result.issues.filter(issue => issue !== 'Unreadable image');
+      for (const image of document.images) if (!image.complete || !image.naturalWidth) result.issues.push('Unreadable image');
+      return result;
+    });
+    report.warnings = Object.keys(doc.footnotes).length ? ['Professional PDF renders supplied footnotes as linked endnotes. Use a supported Word or specialist route when page-associated footnotes are required.'] : [];
     if (failures.length || report.issues.length) throw new Error([...failures, ...report.issues].join('\n'));
     await page.pdf({ path: out, preferCSSPageSize: true, printBackground: true, tagged: true, outline: true, displayHeaderFooter: false });
     await page.evaluate(() => document.querySelectorAll('script').forEach(node => node.remove()));
@@ -45,7 +53,9 @@ export async function renderProfessional(input, { out, screenshots = false, inpu
       if (files.length !== pageCount) throw new Error(`PDF screenshot count ${files.length} does not match PDF page count ${pageCount}.`);
       await Promise.all(files.map((file, index) => fs.rename(path.join(dir, file), path.join(dir, `${String(index + 1).padStart(3, '0')}.png`))));
     }
-    const professionalSources = await Promise.all(['src/professional-browser.mjs', 'src/professional-model.mjs', 'src/professional.css'].map(file => fs.readFile(path.join(root, file))));
+    const rendererFiles = ['src/professional-browser.mjs', 'src/professional-model.mjs', 'src/professional.css', 'src/professional-render.mjs', 'src/runtime.mjs', 'assets/brand/rovn-lockup.svg', 'assets/fonts/inter/InterVariable.woff2', 'assets/fonts/inter/InterVariable-Italic.woff2', 'assets/fonts/Crimson_Pro/CrimsonPro-VariableFont_wght.ttf', 'assets/fonts/Crimson_Pro/CrimsonPro-Italic-VariableFont_wght.ttf', 'assets/fonts/fragment-mono/FragmentMono-Regular.woff2'];
+    if (doc.intent.family === 'proposal') rendererFiles.push('src/proposal.css');
+    const professionalSources = await Promise.all(rendererFiles.map(file => fs.readFile(path.join(root, file))));
     const result = { ...report, pageCount, chromiumVersion: browser.version(), pdf: path.resolve(out), professionalRendererHash: createHash('sha256').update(Buffer.concat(professionalSources)).digest('hex') };
     await fs.writeFile(out.replace(/\.pdf$/, '.qa.json'), JSON.stringify(result, null, 2) + '\n');
     return result;

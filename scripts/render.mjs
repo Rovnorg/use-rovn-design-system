@@ -22,7 +22,7 @@ if (!input) { console.log('Usage: npm run render -- document.md [--out output/pd
 let browser, server;
 try {
   const inputExtension = path.extname(input).toLowerCase();
-  const defaultsAreLegacy = options.layout === 'report-v1' || (inputExtension === '.json' && options.layout !== 'professional-v2');
+  const defaultsAreLegacy = options.layout === 'report-v1';
   let doc = await loadInput(path.resolve(input), { defaultMetadata: defaultsAreLegacy });
   if (options.title) doc.metadata.title = options.title;
   if (options.author) doc.metadata.author = options.author;
@@ -33,8 +33,9 @@ try {
   }
   if (options.layout && !['report-v1', 'professional-v2'].includes(options.layout)) throw new Error('--layout must be report-v1 or professional-v2.');
   const extension = inputExtension;
-  // Existing prepared schema v1 documents remain byte-for-byte on the established report route.
-  const useProfessional = options.layout === 'professional-v2' || (!options.layout && doc.schemaVersion === 2) || (!options.layout && doc.schemaVersion === 1 && extension !== '.json');
+  // Reusing a prepared file must not silently resurrect the retired amber design.
+  // Historical reproduction is an explicit --layout report-v1 operation only.
+  const useProfessional = options.layout !== 'report-v1';
   if (useProfessional) {
     if (options['dark-pages'] != null || doc.metadata.darkPages != null) throw new Error('dark pages are a report-v1 option and are not supported by professional-v2. Use --layout report-v1.');
     const source = doc.schemaVersion === 2 ? validateProfessionalDocument(doc) : toProfessionalDocument(doc, { intent: options.family ? { family: options.family } : doc.metadata.intent || {} });

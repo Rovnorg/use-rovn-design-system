@@ -1,5 +1,7 @@
 # Rōvn professional document system: research and resource catalog
 
+Current visual authority: [design direction, 3 October 2026](../design-direction.md). Historical amber/Crimson/Paper preferences below are dated research context and are superseded for new deliverables. Pure-white reading surfaces, the original Rōvn mark, expressive typography, deliberate amber and purpose-specific composition.
+
 Research date: September 11, 2026. Status: completed initial research milestone and implementation recommendation. This document does not claim that proposed exports already work.
 
 ## Decision
@@ -12,7 +14,7 @@ The companion [document taxonomy](document-taxonomy.json) defines 21 families, t
 
 ## Evidence from the installed system
 
-Inspected upstream: [jkou-cmd/use-rovn-design-system](https://github.com/jkou-cmd/use-rovn-design-system), revision `f00d0183e6353d5953c2a4a7dca700c68da1a5b1`. This is the baseline before the professional-document extension. Skill entry points delegate to the full repository; the entry point alone is not the implementation.
+Inspected repository: `use-rovn-design-system`, branch `main`, clean initial state, revision `f00d0183e6353d5953c2a4a7dca700c68da1a5b1`. Its fetched `origin/main` was the same revision. The global installed entry delegates to the repository skill; it is not the implementation. No source files had been changed at the time of this baseline.
 
 The upstream describes a report-focused pipeline and the same fixed geometry observed locally. [Jerry's repository](https://github.com/jkou-cmd/use-rovn-design-system)
 
@@ -109,8 +111,9 @@ No engine is selected because it has the longest list of output extensions. The 
 
 ## Conflicts and research limitations
 
-- These adapters use the upstream repository's amber/Crimson Pro/Inter/Fragment Mono resources. This document-specific implementation does not amend a company's broader product policy or authorize changes to live surfaces.
-- The fixtures use synthetic content; private company records and product-governance sources are outside this public research package.
+- Current product canon includes an operational style file with older teal/Source Serif/Hanken choices. The founder explicitly selected Jerry's installed amber/Crimson Pro/Inter/Fragment Mono system for this task. Preserve that selected system for these document adapters; do not silently rewrite product canon or live surfaces to resolve the difference.
+- The fetched product revision was `1dd8ee5958f413db91bda9992fa771bd85fd41b0`; all 141 pinned files were validated after a successful fetch. The resolver was run with `--no-fetch` after that separate fetch, so its receipt labels itself offline. The fetch plus subsequent immutable validation is the evidence chain. Local `Rovn/current` had a different HEAD and was not used as current authority.
+- Company memory had extensive existing modifications. Its charter and relevant design instruction were inspected; no company ledger or generated brain was changed. No company fact is needed in synthetic document fixtures.
 - Some resource endpoints failed or redirected. The catalog uses successfully retrieved primary alternatives. Unverified licenses remain unverified. The initial study has not benchmarked every candidate renderer or certified accessibility.
 - Public availability does not establish reuse permission for artwork, brand assets, legal text or downloaded templates. Preserve each resource's provenance and notices before bundling.
 - The 21-family taxonomy is an extensible inventory. Specialist legal, clinical, regulatory, engineering-drawing, tax, shipping and archival workflows need their own exact schemas and recipients. A generic renderer must route these deliberately rather than announce support based on a filename.

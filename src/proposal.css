@@ -1,0 +1,16 @@
+/* Rōvn client proposals: expressive title, amber index, disciplined scope. */
+.family-proposal .cover { padding-bottom:.26in; margin-bottom:.25in; }
+.family-proposal .cover h1 { font:350 45pt/.98 Crimson,Georgia,serif; letter-spacing:-.035em; max-width:6.5in; margin:0 0 .19in; }
+.family-proposal .cover>p { font:400 11.5pt/1.45 Inter,Arial,sans-serif; color:var(--muted); }
+.family-proposal .section { margin-top:.26in; }
+.family-proposal .proposal-heading { display:grid; grid-template-columns:.43in 1fr; gap:.12in; margin-bottom:.13in; }
+.family-proposal .proposal-heading h2 { font:450 23pt/1.1 Crimson,Georgia,serif; letter-spacing:-.02em; }
+.family-proposal .section-number { font:350 23pt/1 Crimson,Georgia,serif; color:var(--accent); }
+.family-proposal .key-values { grid-template-columns:repeat(2,1fr); }
+@media screen and (max-width:600px) {
+ .family-proposal .cover h1 { font-size:44px; }
+ .family-proposal .cover>p { font-size:17px; }
+ .family-proposal .proposal-heading { grid-template-columns:28px 1fr; gap:10px; }
+ .family-proposal .proposal-heading h2,.family-proposal .section-number { font-size:28px; }
+ .family-proposal .key-values { grid-template-columns:1fr; }
+}
